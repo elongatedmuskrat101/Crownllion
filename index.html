@@ -6,9 +6,8 @@
   <title>Crownllion - Team Daily Challenge</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Smooth transition for the diving shrimp meter */
     #shrimp-diver {
-      transition: top 1s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: top 1.2s cubic-bezier(0.15, 0.85, 0.35, 1.2);
     }
   </style>
 </head>
@@ -20,21 +19,16 @@
       <span class="text-2xl">🦐</span>
       <h1 class="text-xl font-bold tracking-wider text-indigo-400 uppercase">Crownllion</h1>
     </div>
-    <div id="user-bar" class="flex items-center gap-3">
-      <!-- Dynamic User Info / Logout Button -->
-    </div>
+    <div id="user-bar" class="flex items-center gap-3"></div>
   </header>
 
   <!-- Login / Signup Modal -->
   <div id="auth-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-2xl max-w-sm w-full space-y-4">
-      
-      <!-- Modal Tabs -->
       <div class="flex border-b border-slate-700 pb-2 gap-4">
         <button id="tab-login" class="text-indigo-400 font-bold text-sm border-b-2 border-indigo-500 pb-1 flex-1">Log In</button>
         <button id="tab-signup" class="text-slate-400 hover:text-slate-200 font-bold text-sm pb-1 flex-1">Sign Up</button>
       </div>
-
       <p id="auth-subtitle" class="text-xs text-slate-400">Enter your username and password.</p>
       
       <form id="auth-form" class="space-y-3">
@@ -46,7 +40,6 @@
           <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
           <input type="password" id="password-input" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-indigo-500">
         </div>
-        
         <button type="submit" id="auth-submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg text-sm transition">
           Log In
         </button>
@@ -55,16 +48,14 @@
     </div>
   </div>
 
-  <!-- Main Game Dashboard -->
+  <!-- Main Workspace -->
   <main class="flex-1 max-w-6xl w-full mx-auto p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
 
-    <!-- Ocean Depth Meter (Krillion Style) -->
-    <section class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col items-center relative overflow-hidden h-[450px]">
+    <!-- Ocean Depth Meter -->
+    <section class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col items-center relative overflow-hidden h-[480px]">
       <span class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Ocean Depth</span>
       
-      <!-- Vertical Ocean Track -->
-      <div class="w-8 bg-gradient-to-b from-sky-600 via-indigo-950 to-slate-950 rounded-full flex-1 relative border border-slate-800 my-2">
-        <!-- Descending Shrimp -->
+      <div class="w-8 bg-gradient-to-b from-sky-500 via-indigo-900 to-slate-950 rounded-full flex-1 relative border border-slate-800 my-2">
         <div id="shrimp-diver" class="absolute left-1/2 -translate-x-1/2 text-2xl transition-all duration-1000" style="top: 0%;">
           🦐
         </div>
@@ -72,7 +63,7 @@
 
       <div class="text-center">
         <span id="depth-label" class="text-xs font-mono text-indigo-400 font-bold block">0m (Surface)</span>
-        <span id="score-label" class="text-xs text-slate-400">100 Pts</span>
+        <span id="score-label" class="text-xs text-slate-400">0 Pts</span>
       </div>
     </section>
 
@@ -83,7 +74,12 @@
         <div class="flex justify-between items-center border-b border-slate-700 pb-4">
           <div>
             <h2 class="text-xs font-bold uppercase tracking-widest text-indigo-400">Daily Challenge #01</h2>
-            <p class="text-slate-400 text-xs">Find the word that connects all three clues!</p>
+            <p class="text-slate-400 text-xs">Rarer answers sink deeper into the ocean!</p>
+          </div>
+          <!-- 25s Timer Display -->
+          <div class="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-lg text-center">
+            <span class="text-[10px] text-slate-400 block uppercase font-bold">Time Left</span>
+            <span id="timer-display" class="font-mono font-bold text-amber-400 text-sm">25s</span>
           </div>
         </div>
 
@@ -107,7 +103,7 @@
         <form id="guess-form" class="flex gap-2">
           <input type="text" id="guess-input" autocomplete="off" placeholder="Type your answer..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm">
           <button type="submit" id="submit-guess-btn" class="bg-indigo-600 hover:bg-indigo-500 font-bold px-6 py-3 rounded-xl transition text-sm">
-            Submit
+            Dive
           </button>
         </form>
 
@@ -128,26 +124,11 @@
 
   </main>
 
-  <!-- Firebase Integration Script -->
+  <!-- Firebase & Game Logic Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { 
-      getAuth, 
-      createUserWithEmailAndPassword, 
-      signInWithEmailAndPassword, 
-      updateProfile, 
-      onAuthStateChanged, 
-      signOut 
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { 
-      getFirestore, 
-      collection, 
-      addDoc, 
-      onSnapshot, 
-      query, 
-      orderBy, 
-      serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDtvXvvKSDW4w781kYm2e4lg47cC7Lx6NY",
@@ -163,13 +144,35 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const TARGET_ANSWER = "FISH";
     const PUZZLE_ID = "Dive_01";
 
+    // Tiered Answer Bank (~50 options mapped across 100, 85, 60, 30, 10 point tiers)
+    const ANSWER_TIERS = {
+      // 100 Pts (Ultra Rare / Trench Depth)
+      "ABYSS": 100, "BENTHIC": 100, "PELAGIC": 100, "HADAL": 100, "THERMOCLINE": 100,
+      "EPIPELAGIC": 100, "MESOPELAGIC": 100, "BATHYPELAGIC": 100, "CHEMOSYNTHESIS": 100, "HYDROTHERMAL": 100,
+
+      // 85 Pts (Very Rare)
+      "CREPUSCULAR": 85, "BIOLUMINESCENCE": 85, "CEPHALOPOD": 85, "ECHINODERM": 85, "CARTILAGINOUS": 85,
+      "DETRITUS": 85, "UPWELLING": 85, "SALINITY": 85, "ESTUARY": 85, "MANGROVE": 85,
+
+      // 60 Pts (Uncommon)
+      "CORAL": 60, "ANEMONE": 60, "JELLYFISH": 60, "OCTOPUS": 60, "SEAHORSE": 60,
+      "STINGRAY": 60, "BARNACLE": 60, "PLANKTON": 60, "KELP": 60, "URCHIN": 60,
+
+      // 30 Pts (Common)
+      "SHARK": 30, "WHALE": 30, "TURTLE": 30, "CRAB": 30, "LOBSTER": 30,
+      "SQUID": 30, "DOLPHIN": 30, "SEAL": 30, "OTTER": 30, "PENGUIN": 30,
+
+      // 10 Pts (Very Common / Surface Level)
+      "FISH": 10, "OCEAN": 10, "SEA": 10, "WATER": 10, "SWIM": 10,
+      "WAVE": 10, "BEACH": 10, "SAND": 10, "BLUE": 10, "SHELL": 10
+    };
+
     let currentUser = null;
-    let attempts = 0;
-    let potentialScore = 100;
     let isCompleted = false;
+    let timeLeft = 25;
+    let timerInterval = null;
     let isSignUpMode = false;
 
     // DOM Elements
@@ -188,21 +191,57 @@
     const guessInput = document.getElementById('guess-input');
     const submitBtn = document.getElementById('submit-guess-btn');
     const gameStatus = document.getElementById('game-status');
+    const timerDisplay = document.getElementById('timer-display');
     const shrimpDiver = document.getElementById('shrimp-diver');
     const depthLabel = document.getElementById('depth-label');
     const scoreLabel = document.getElementById('score-label');
     const leaderboard = document.getElementById('leaderboard');
 
-    // Krillion Ocean Depth Visualizer Function
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          lockGame("⏰ Time's up! Recorded 0 points.");
+          submitScore(0, "TIMEOUT");
+        }
+      }, 1000);
+    }
+
+    function lockGame(message) {
+      isCompleted = true;
+      clearInterval(timerInterval);
+      guessInput.disabled = true;
+      submitBtn.disabled = true;
+      submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      gameStatus.className = "text-rose-400 text-sm text-center font-semibold";
+      gameStatus.textContent = message;
+    }
+
     function updateShrimpDepth(score) {
-      // Score ranges from 10 to 100. Max depth = 90% down the track
-      const percentage = Math.max(0, Math.min(92, (100 - score))); 
+      // Score ranges from 0 to 100. Max depth = 92% down the track
+      const percentage = score === 0 ? 0 : Math.max(10, Math.min(92, score));
       shrimpDiver.style.top = percentage + '%';
-      depthLabel.textContent = `${Math.round(percentage * 110)}m deep`;
+      depthLabel.textContent = score === 0 ? "0m (Surface)" : `${Math.round(percentage * 12)}m deep`;
       scoreLabel.textContent = `${score} Pts`;
     }
 
-    // Toggle Login vs Signup Tabs
+    async function submitScore(score, word) {
+      if (!currentUser) return;
+      try {
+        await addDoc(collection(db, "scores"), {
+          user: currentUser.displayName || currentUser.email.split('@')[0],
+          score: score,
+          word: word,
+          puzzleId: PUZZLE_ID,
+          createdAt: serverTimestamp()
+        });
+      } catch (err) {
+        console.error("Error saving score:", err);
+      }
+    }
+
     tabLogin.addEventListener('click', () => {
       isSignUpMode = false;
       tabLogin.className = "text-indigo-400 font-bold text-sm border-b-2 border-indigo-500 pb-1 flex-1";
@@ -221,7 +260,6 @@
       authError.classList.add('hidden');
     });
 
-    // Auth State Observer
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
       if (user) {
@@ -232,16 +270,18 @@
           <button id="logout-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs px-2.5 py-1 rounded-md text-slate-300 transition">Log Out</button>
         `;
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+        
+        // Start 25s timer once logged in & ready
+        if (!isCompleted) startTimer();
       } else {
         authModal.classList.remove('hidden');
+        clearInterval(timerInterval);
       }
     });
 
-    // Handle Auth Submit
     authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       authError.classList.add('hidden');
-      
       const rawUsername = usernameInput.value.trim().toLowerCase().replace(/\s+/g, '');
       const cleanDisplayName = usernameInput.value.trim();
       const password = passwordInput.value;
@@ -256,20 +296,12 @@
           await signInWithEmailAndPassword(auth, internalEmail, password);
         }
       } catch (err) {
-        let msg = err.message.replace('Firebase: ', '');
-        if (msg.includes('auth/invalid-credential') || msg.includes('auth/user-not-found')) {
-          msg = "Incorrect username or password.";
-        } else if (msg.includes('auth/email-already-in-use')) {
-          msg = "Username already taken. Please choose another.";
-        } else if (msg.includes('auth/weak-password')) {
-          msg = "Password should be at least 6 characters.";
-        }
-        authError.textContent = msg;
+        authError.textContent = err.message.replace('Firebase: ', '');
         authError.classList.remove('hidden');
       }
     });
 
-    // Handle Game Guesses & Shrimp Dive
+    // Handle Guess & Scoring
     guessForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (isCompleted || !currentUser) return;
@@ -277,41 +309,28 @@
       const userGuess = guessInput.value.trim().toUpperCase();
       if (!userGuess) return;
 
-      if (userGuess === TARGET_ANSWER) {
-        isCompleted = true;
-        guessInput.disabled = true;
-        submitBtn.disabled = true;
-        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      isCompleted = true;
+      clearInterval(timerInterval);
+      guessInput.disabled = true;
+      submitBtn.disabled = true;
+      submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
-        updateShrimpDepth(potentialScore);
-
+      let earnedScore = 0;
+      if (ANSWER_TIERS.hasOwnProperty(userGuess)) {
+        earnedScore = ANSWER_TIERS[userGuess];
+        updateShrimpDepth(earnedScore);
         gameStatus.className = "text-emerald-400 text-sm text-center font-semibold";
-        gameStatus.textContent = `🎉 Correct! Shrimp dove to depth with ${potentialScore} points!`;
-
-        try {
-          await addDoc(collection(db, "scores"), {
-            user: currentUser.displayName || currentUser.email.split('@')[0],
-            score: potentialScore,
-            attempts: attempts + 1,
-            puzzleId: PUZZLE_ID,
-            createdAt: serverTimestamp()
-          });
-        } catch (err) {
-          console.error("Error saving score:", err);
-        }
-
+        gameStatus.textContent = `🎉 Correct! Word rarity scored ${earnedScore} points!`;
       } else {
-        attempts++;
-        potentialScore = Math.max(10, 100 - (attempts * 15));
-        updateShrimpDepth(potentialScore);
-
+        updateShrimpDepth(0);
         gameStatus.className = "text-rose-400 text-sm text-center font-semibold";
-        gameStatus.textContent = `❌ Incorrect! (${attempts} wrong guess${attempts > 1 ? 'es' : ''})`;
-        guessInput.value = "";
+        gameStatus.textContent = `❌ Incorrect word! 0 points.`;
       }
+
+      await submitScore(earnedScore, userGuess);
     });
 
-    // Realtime Leaderboard Listener
+    // Realtime Leaderboard
     const q = query(collection(db, "scores"), orderBy("score", "desc"));
     onSnapshot(q, (snapshot) => {
       leaderboard.innerHTML = "";
@@ -327,7 +346,7 @@
         row.innerHTML = `
           <div>
             <span class="font-bold text-slate-200 block">${item.user}</span>
-            <span class="text-[10px] text-slate-500">${item.attempts || 1} attempt(s)</span>
+            <span class="text-[10px] text-indigo-400 uppercase">Guess: ${item.word || 'N/A'}</span>
           </div>
           <span class="text-indigo-400 font-mono font-bold text-sm">${item.score} pts</span>
         `;
