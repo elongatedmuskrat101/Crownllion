@@ -5,11 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Crownllion - Team Daily Challenge</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Smooth transition for the diving shrimp meter */
+    #shrimp-diver {
+      transition: top 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  </style>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col">
 
   <!-- Header -->
-  <header class="border-b border-slate-800 bg-slate-950 px-6 py-4 flex justify-between items-center">
+  <header class="border-b border-slate-800 bg-slate-950 px-6 py-4 flex justify-between items-center z-10">
     <div class="flex items-center gap-2">
       <span class="text-2xl">🦐</span>
       <h1 class="text-xl font-bold tracking-wider text-indigo-400 uppercase">Crownllion</h1>
@@ -50,7 +56,25 @@
   </div>
 
   <!-- Main Game Dashboard -->
-  <main class="flex-1 max-w-5xl w-full mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+  <main class="flex-1 max-w-6xl w-full mx-auto p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+
+    <!-- Ocean Depth Meter (Krillion Style) -->
+    <section class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col items-center relative overflow-hidden h-[450px]">
+      <span class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Ocean Depth</span>
+      
+      <!-- Vertical Ocean Track -->
+      <div class="w-8 bg-gradient-to-b from-sky-600 via-indigo-950 to-slate-950 rounded-full flex-1 relative border border-slate-800 my-2">
+        <!-- Descending Shrimp -->
+        <div id="shrimp-diver" class="absolute left-1/2 -translate-x-1/2 text-2xl transition-all duration-1000" style="top: 0%;">
+          🦐
+        </div>
+      </div>
+
+      <div class="text-center">
+        <span id="depth-label" class="text-xs font-mono text-indigo-400 font-bold block">0m (Surface)</span>
+        <span id="score-label" class="text-xs text-slate-400">100 Pts</span>
+      </div>
+    </section>
 
     <!-- Puzzle Workspace -->
     <section class="md:col-span-2 space-y-6">
@@ -60,10 +84,6 @@
           <div>
             <h2 class="text-xs font-bold uppercase tracking-widest text-indigo-400">Daily Challenge #01</h2>
             <p class="text-slate-400 text-xs">Find the word that connects all three clues!</p>
-          </div>
-          <div class="text-right">
-            <span class="text-xs text-slate-400 block">Potential Score</span>
-            <span id="current-score-display" class="text-lg font-mono font-bold text-emerald-400">100 Pts</span>
           </div>
         </div>
 
@@ -87,7 +107,7 @@
         <form id="guess-form" class="flex gap-2">
           <input type="text" id="guess-input" autocomplete="off" placeholder="Type your answer..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm">
           <button type="submit" id="submit-guess-btn" class="bg-indigo-600 hover:bg-indigo-500 font-bold px-6 py-3 rounded-xl transition text-sm">
-            Submit Guess
+            Submit
           </button>
         </form>
 
@@ -129,7 +149,6 @@
       serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDtvXvvKSDW4w781kYm2e4lg47cC7Lx6NY",
       authDomain: "crownllion.firebaseapp.com",
@@ -169,8 +188,19 @@
     const guessInput = document.getElementById('guess-input');
     const submitBtn = document.getElementById('submit-guess-btn');
     const gameStatus = document.getElementById('game-status');
-    const scoreDisplay = document.getElementById('current-score-display');
+    const shrimpDiver = document.getElementById('shrimp-diver');
+    const depthLabel = document.getElementById('depth-label');
+    const scoreLabel = document.getElementById('score-label');
     const leaderboard = document.getElementById('leaderboard');
+
+    // Krillion Ocean Depth Visualizer Function
+    function updateShrimpDepth(score) {
+      // Score ranges from 10 to 100. Max depth = 90% down the track
+      const percentage = Math.max(0, Math.min(92, (100 - score))); 
+      shrimpDiver.style.top = percentage + '%';
+      depthLabel.textContent = `${Math.round(percentage * 110)}m deep`;
+      scoreLabel.textContent = `${score} Pts`;
+    }
 
     // Toggle Login vs Signup Tabs
     tabLogin.addEventListener('click', () => {
@@ -207,7 +237,7 @@
       }
     });
 
-    // Handle Form Submit (Log In / Sign Up using Username)
+    // Handle Auth Submit
     authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       authError.classList.add('hidden');
@@ -215,8 +245,6 @@
       const rawUsername = usernameInput.value.trim().toLowerCase().replace(/\s+/g, '');
       const cleanDisplayName = usernameInput.value.trim();
       const password = passwordInput.value;
-      
-      // Virtual internal email format
       const internalEmail = `${rawUsername}@team.local`;
 
       try {
@@ -241,7 +269,7 @@
       }
     });
 
-    // Handle Game Guesses
+    // Handle Game Guesses & Shrimp Dive
     guessForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (isCompleted || !currentUser) return;
@@ -255,8 +283,10 @@
         submitBtn.disabled = true;
         submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
+        updateShrimpDepth(potentialScore);
+
         gameStatus.className = "text-emerald-400 text-sm text-center font-semibold";
-        gameStatus.textContent = `🎉 Correct! You scored ${potentialScore} points. Score saved!`;
+        gameStatus.textContent = `🎉 Correct! Shrimp dove to depth with ${potentialScore} points!`;
 
         try {
           await addDoc(collection(db, "scores"), {
@@ -273,7 +303,7 @@
       } else {
         attempts++;
         potentialScore = Math.max(10, 100 - (attempts * 15));
-        scoreDisplay.textContent = `${potentialScore} Pts`;
+        updateShrimpDepth(potentialScore);
 
         gameStatus.className = "text-rose-400 text-sm text-center font-semibold";
         gameStatus.textContent = `❌ Incorrect! (${attempts} wrong guess${attempts > 1 ? 'es' : ''})`;
