@@ -147,6 +147,9 @@ body:not(.res) .panel{display:none}
 #sug i{font-style:normal;color:#9db6c6}#sug b{font-weight:400;color:var(--cy)}
 #sug small{display:block;margin-top:4px;color:#7fb7d4;letter-spacing:.12em;font-size:1rem}
 .rf2{margin-top:6px;color:#4f7a94;letter-spacing:.15em;font-size:1.1rem}
+.rc svg{display:block;width:76px;height:auto;margin:16px auto 0;filter:drop-shadow(3px 3px 0 #02050a);animation:pop .45s steps(5) both}
+@keyframes pop{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
+.rc+.ra{margin-top:12px}
 </style>
 </head>
 <body>
@@ -302,7 +305,8 @@ function settle(g,timedout){
   const card=$("card"); card.className="rcard"; card.innerHTML="";
   const col=CC[pts]||"#a9bccb", h=el("h1","rt",pts?TIERS[pts][0]:"Nothing landed"); h.style.color=col;
   const rp=el("p","rp"), pp=el("span","",`+${pts} pts`); pp.style.color=col; rp.append(pp,pts?` \u00B7 sink ${pts*10}m`:"");
-  card.append(h,el("p","ra",g.trim()?`\u201C${g.trim()}\u201D`:"\u2014"),rp,
+  const rc=el("div","rc"); if(pts)rc.innerHTML=CROWN(col);
+  card.append(h,rc,el("p","ra",g.trim()?`\u201C${g.trim()}\u201D`:"\u2014"),rp,
     el("p","rf",pts?FLAVOR[pts]:(timedout?"the clock beat you to it.":"that answer didn't fit.")),
     el("p","rf2",`total depth ${(total*10).toLocaleString()}m`));
   $("sug")&&$("sug").classList.add("hidden");
