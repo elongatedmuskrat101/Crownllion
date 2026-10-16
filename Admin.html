@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crownllion admin – import questions</title>
+<style>
+body{font:16px/1.5 system-ui,sans-serif;max-width:720px;margin:30px auto;padding:0 16px;background:#06182a;color:#e8f4f8}
+h1{font-size:1.5rem}
+input,button{font:inherit;padding:8px 12px;border-radius:8px;border:1px solid #25507a;background:#0f1b33;color:#fff}
+button{cursor:pointer;background:#1c6fa0}
+button:disabled{opacity:.5;cursor:not-allowed}
+pre{background:#030b14;padding:12px;border-radius:8px;max-height:280px;overflow:auto;white-space:pre-wrap;font-size:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0;align-items:center}
+.hide{display:none}
+.err{color:#ff6b7a}
+small{color:#8fb0c0}
+</style>
+</head>
+<body>
+<h1>Crownllion question importer</h1>
+
+<div id="login">
+  <p>Log in with the admin account (the same username and password you use in the game).</p>
+  <form id="lf" class="row">
+    <input id="u" placeholder="username" required autocomplete="username">
+    <input id="p" type="password" placeholder="password" required autocomplete="current-password">
+    <button>Log in</button>
+  </form>
+  <p id="lerr" class="err"></p>
+</div>
+
+<div id="tool" class="hide">
+  <p>Signed in as <b id="who"></b></p>
+  <div class="row">
+    <label>Day 1 of your file is <input id="start" type="date"></label>
+  </div>
+  <div class="row">
+    <input id="file" type="file" accept=".csv,text/csv">
+  </div>
+  <pre id="preview">Choose a CSV file to see a preview.</pre>
+  <div class="row">
+    <button id="go" disabled>Upload to Firestore</button>
+    <small>Uploading a date that already exists overwrites it.</small>
+  </div>
+  <pre id="log"></pre>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { initializeFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyDtvXvvKSDW4w781kYm2e4lg47cC7Lx6NY", authDomain:"crownllion.firebaseapp.com", projectId:"crownllion",
+  storageBucket:"crownllion.firebasestorage.app", messagingSenderId:"65215415079", appId:"1:65215415079:web:5558871761efd11e48df02"
+});
+const auth = getAuth(app), db = initializeFirestore(app,{experimentalAutoDetectLongPolling:true});
+const $ = id => document.getElementById(id);
+const log = m => { $("log").textContent += m + "\n"; };
+const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const TIERS = [10,15,30,60,85,100];
+
+$("lf").addEventListener("submit", async e => {
+  e.preventDefault(); $("lerr").textContent = "";
+  const name = $("u").value.trim().toLowerCase().replace(/\s+/g,"");
+  try { await signInWithEmailAndPassword(auth, name + "@team.local", $("p").value); }
+  catch (err) { $("lerr").textContent = err.message.replace("Firebase: ",""); }
+});
+onAuthStateChanged(auth, u => {
+  $("login").classList.toggle("hide", !!u);
+  $("tool").classList.toggle("hide", !u);
+  $("who").textContent = u ? u.email : "";
+});
+
+const t = new Date(); t.setDate(t.getDate() + 1); $("start").value = fmt(t);
+
+/* small CSV parser: handles quoted fields, commas inside quotes, "" escapes, CRLF */
+function parseCSV(text){
+  const rows = []; let r = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i+1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { r.push(f); f = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i+1] === "\n") i++; r.push(f); f = ""; if (r.some(x => x.trim())) rows.push(r); r = []; }
+    else f += c;
+  }
+  r.push(f); if (r.some(x => x.trim())) rows.push(r);
+  return rows;
+}
+
+let days = [];
+$("file").addEventListener("change", async e => {
+  days = []; $("go").disabled = true; $("log").textContent = "";
+  const rows = parseCSV((await e.target.files[0].text()).replace(/^\uFEFF/, ""));
+  const head = rows.shift().map(x => x.trim().toLowerCase());
+  const ix = k => head.indexOf(k);
+  if (["day","prompt","points","answer"].some(k => ix(k) < 0)) { $("preview").textContent = "The first row must be: day,prompt,points,answer"; return; }
+  const byDay = new Map(), warn = [];
+  rows.forEach((r, n) => {
+    const day = parseInt(r[ix("day")]), q = (r[ix("prompt")] || "").trim(), pts = parseInt(r[ix("points")]), ans = (r[ix("answer")] || "").trim();
+    if (!day || !q || !ans) { warn.push(`row ${n+2}: missing day, prompt or answer`); return; }
+    if (!TIERS.includes(pts)) { warn.push(`row ${n+2}: points must be 10, 15, 30, 60, 85 or 100 (got "${r[ix("points")]}")`); return; }
+    if (!byDay.has(day)) byDay.set(day, new Map());
+    const d = byDay.get(day); if (!d.has(q)) d.set(q, { q, a: {} });
+    const p = d.get(q); (p.a[pts] = p.a[pts] || []).push(ans);
+  });
+  days = [...byDay.entries()].sort((a, b) => a[0] - b[0]).map(([n, d]) => ({ n, prompts: [...d.values()] }));
+  days.forEach(d => {
+    if (d.prompts.length !== 7) warn.push(`day ${d.n}: has ${d.prompts.length} prompts (the game expects 7)`);
+    d.prompts.forEach(p => { if (!p.a[100]) warn.push(`day ${d.n} "${p.q}": no 100-point answer`); });
+  });
+  const [y, m, dd] = $("start").value.split("-").map(Number);
+  const range = days.length ? `${fmt(new Date(y, m-1, dd + days[0].n - 1, 12))} to ${fmt(new Date(y, m-1, dd + days[days.length-1].n - 1, 12))}` : "";
+  const answers = days.reduce((s, d) => s + d.prompts.reduce((s2, p) => s2 + Object.values(p.a).reduce((s3, l) => s3 + l.length, 0), 0), 0);
+  $("preview").textContent = `${days.length} day(s), ${answers} answers, dates ${range}\n` + (warn.length ? "\nWarnings:\n" + warn.slice(0, 40).join("\n") + (warn.length > 40 ? `\n…and ${warn.length - 40} more` : "") : "\nNo problems found.");
+  $("go").disabled = !days.length;
+});
+
+$("go").addEventListener("click", async () => {
+  $("go").disabled = true;
+  const [y, m, d] = $("start").value.split("-").map(Number);
+  for (const day of days) {
+    const id = fmt(new Date(y, m-1, d + day.n - 1, 12));
+    try { await setDoc(doc(db, "dives", id), { day: day.n, prompts: day.prompts }); log(`OK   ${id}  (${day.prompts.length} prompts)`); }
+    catch (err) { log(`FAIL ${id}: ${err.code || err.message}`); log("Stopped. Check your Firestore rules allow your admin account to write to dives."); return; }
+  }
+  log("Done.");
+});
+</script>
+</body>
+</html>
