@@ -150,6 +150,23 @@ body:not(.res) .panel{display:none}
 .rc svg{display:block;width:76px;height:auto;margin:16px auto 0;filter:drop-shadow(3px 3px 0 #02050a);animation:pop .45s steps(5) both}
 @keyframes pop{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
 .rc+.ra{margin-top:12px}
+/* summary page */
+body.res main{max-width:560px;padding:26px 18px 90px}
+body.res #hud,body.res #ruler,body.res #pc,body.res #fish{display:none}
+body.res #world{filter:brightness(.42) saturate(.75)}
+body.res #who{top:12px}
+.sh{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.slogo{font-size:2rem;letter-spacing:.1em;color:#fff;text-shadow:-2px 0 var(--pk),2px 0 var(--cy)}
+.sdate{color:#7fb7d4;letter-spacing:.2em;text-transform:uppercase;font-size:1rem}
+.ss{display:flex;align-items:flex-end;gap:12px;margin:14px 0 4px}
+.sbig{font-size:5.6rem;line-height:.85;color:#fff}
+.sdep{color:var(--cy);font-size:1.15rem;padding-bottom:8px}
+#bell svg,.sum svg{display:block;width:100%;height:auto}
+.spct{color:var(--cy);letter-spacing:.15em;text-transform:uppercase;font-size:1.1rem;margin:6px 0 14px}
+.sh3{font-weight:400;color:#7fb7d4;letter-spacing:.25em;text-transform:uppercase;font-size:1.05rem;margin:34px 0 10px}
+.bear{display:grid;grid-template-columns:24px 76px 1fr;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #1d3550;color:#8aa3b3}
+.bear.on{color:#fff}.bear b{font-weight:400}
+.bear svg{width:20px!important}
 </style>
 </head>
 <body>
@@ -229,7 +246,7 @@ const TIME=25, MAXDEPTH=7000;
 const today = new Date().toISOString().slice(0,10);
 const $=id=>document.getElementById(id);
 const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;};
-let tries=[], user=null, i=0, total=0, results=[], timer=null, left=TIME, locked=false;
+let todayRows=[], tries=[], user=null, i=0, total=0, results=[], timer=null, left=TIME, locked=false;
 
 /* ---------- Scene: sky lifts away and the sea darkens as you sink ---------- */
 for(let m=0;m<=MAXDEPTH;m+=1000){const t=el("div","tk",m+"m");t.style.top=(m/MAXDEPTH*100)+"%";$("ruler").append(t);}
@@ -320,21 +337,78 @@ function settle(g,timedout){
   }
   sink();
 }
+const BANDS=[[0,150,10,"Plankton","drifting near the surface."],[151,250,30,"Schooler","keeping pace with the crowd."],[251,350,60,"Rare","past the thermocline. nice."],[351,449,85,"Deep Cut","properly deep."],[450,9999,100,"One in a Krillion","trench dweller."]];
+const crownG=(c,x,y,k)=>`<g transform="translate(${x-8*k},${y-5.5*k}) scale(${k})"><path fill="${c}" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></g>`;
+function diveLogSVG(){
+  const W=520,H=250,L=46,T=16,B=36,pw=W-L-12,ph=H-T-B,X=k=>L+24+k*(pw-48)/6,Y=p=>T+p/100*ph;
+  let g="";
+  [0,25,50,75,100].forEach(v=>{const y=Y(v);g+=`<line x1="${L}" x2="${W-10}" y1="${y}" y2="${y}" stroke="#25507a" stroke-dasharray="2 5" opacity=".6"/><text x="${L-6}" y="${y+4}" text-anchor="end" fill="#6e8da0" font-size="14">${v?"-"+v:"0m"}</text>`;});
+  results.forEach((r,k)=>{const x=X(k),y=Y(r.pts),c=CC[r.pts]||"#5a6b7d";
+    g+=`<line x1="${x}" x2="${x}" y1="${T}" y2="${y}" stroke="${c}" opacity=".5"/>`+(r.pts?crownG(c,x,y,1.5):`<circle cx="${x}" cy="${T}" r="4" fill="${c}"/>`)+`<text x="${x}" y="${H-10}" text-anchor="middle" fill="#6e8da0" font-size="14">${k+1}</text>`;});
+  return `<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+}
+const dens=(sc,h,v)=>sc.reduce((y,s)=>y+Math.exp(-.5*((v-s)/h)**2),0);
+/* live bell curve: a smoothed distribution of everyone's scores today */
+function bellSVG(rows){
+  const W=520,H=150,B=26,T=8,sc=rows.map(r=>r.score),n=sc.length,mean=sc.reduce((a,b)=>a+b,0)/n;
+  const sd=Math.sqrt(sc.reduce((a,b)=>a+(b-mean)**2,0)/n)||0, h=Math.max(35,1.06*(sd||40)*Math.pow(n,-.2));
+  let max=0; const pts=[]; for(let v=0;v<=700;v+=5){const y=dens(sc,h,v);pts.push([v,y]);if(y>max)max=y;}
+  const X=v=>v/700*W, Y=y=>T+(H-T-B)*(1-.92*y/max);
+  const line=pts.map(([v,y])=>`${X(v).toFixed(1)},${Y(y).toFixed(1)}`).join("L");
+  const tv=Math.min(total,700), yx=X(tv), yy=Y(dens(sc,h,tv));
+  let ax=""; for(let v=0;v<=700;v+=100)ax+=`<text x="${X(v)}" y="${H-6}" text-anchor="${v===0?"start":v===700?"end":"middle"}" fill="#6e8da0" font-size="14">${v}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}"><path d="M${line}L${W},${H-B}L0,${H-B}Z" fill="rgba(63,216,240,.16)"/><path d="M${line}" fill="none" stroke="#3fd8f0" stroke-width="2.5"/><line x1="${yx}" x2="${yx}" y1="${yy}" y2="${H-B}" stroke="#ff4f8b" stroke-width="2.5"/><circle cx="${yx}" cy="${yy}" r="5" fill="#ff4f8b"/><text x="${yx}" y="${H-6}" text-anchor="middle" fill="#ff4f8b" font-size="15">YOU</text>${ax}</svg>`;
+}
+const openEv=new Set();
+function liveSummary(){
+  if(!$("bell"))return;
+  const rows=todayRows.slice();
+  if(user&&!rows.some(r=>r.uid===user.uid))rows.push({uid:user.uid,user:user.displayName||"you",score:total,results});
+  $("bell").innerHTML=bellSVG(rows);
+  const others=rows.filter(r=>!user||r.uid!==user.uid), pc=$("pct");
+  if(others.length){const below=others.filter(r=>r.score<total).length,tie=others.filter(r=>r.score===total).length;pc.textContent=`Better than ${Math.round(100*(below+tie/2)/others.length)}% of today's players (${others.length+1} played)`;}
+  else pc.textContent="First in the water today. The curve fills in as colleagues finish.";
+  const ev=$("ev"); ev.innerHTML="";
+  if(!others.length){ev.append(el("p","","No one else has finished yet. Check back as colleagues play."));return;}
+  others.sort((a,b)=>b.score-a.score).forEach(r=>{
+    const key=r.uid||r.user, d=document.createElement("details"), sm=document.createElement("summary");
+    sm.append(el("span","",r.user),el("span","",`${r.score} pts`)); d.append(sm);
+    const box=el("div","sheet");
+    (r.results||[]).forEach(x=>{const line=el("p"),tag=el("b","",`${x.pts} `);tag.style.color=CC[x.pts]||"#8aa3b3";line.append(tag,`${x.q.replace("Name a ","").replace("Name ","")}: ${x.guess}`);box.append(line);});
+    if(!(r.results||[]).length)box.textContent="No answers recorded.";
+    d.append(box); d.open=openEv.has(key);
+    d.addEventListener("toggle",()=>{d.open?openEv.add(key):openEv.delete(key);});
+    ev.append(d);
+  });
+}
 async function finish(save){
-  clearInterval(timer); document.body.classList.add("res"); $("bar").className="hidden"; $("card").className="";
-  const card=$("card"); card.innerHTML="";
-  card.append(el("div","top",`Dive complete · ${today}`));
-  card.append(el("div","big",total.toLocaleString()+" pts"));
-  card.append(el("p","",`${(total*10).toLocaleString()} m deep. You reached ${bearing(total)} depth.`));
+  clearInterval(timer); document.body.classList.add("res"); $("bar").className="hidden";
+  scene(0,innerHeight*.56);
+  const card=$("card"); card.className="sum"; card.innerHTML="";
+  const hd=el("div","sh"); hd.append(el("span","slogo","CROWNLLION"),el("span","sdate",`Dive complete \u00B7 ${today}`)); card.append(hd);
+  const sc=el("div","ss"); sc.append(el("span","sbig",total.toLocaleString()),el("span","sdep",`-${(total*10).toLocaleString()}m`)); card.append(sc);
+  const bl=el("div"); bl.id="bell"; card.append(bl);
+  const pc=el("p","spct"); pc.id="pct"; card.append(pc);
+  const share=el("button","px sm","Copy result");
+  share.onclick=()=>{navigator.clipboard.writeText(`Crownllion ${today}\n${total} pts \u00B7 ${total*10} m\n`+results.map(r=>r.pts>=100?"\uD83D\uDFE8":r.pts>=60?"\uD83D\uDFE7":r.pts>0?"\uD83D\uDFE6":"\u2B1B").join(""));share.textContent="Copied";};
+  card.append(share);
+  const note=el("p","",""); note.id="pend"; note.style.cssText="margin-top:10px;color:#7fb7d4"; card.append(note);
+  card.append(el("h3","sh3","Dive log")); const dl=el("div"); dl.innerHTML=diveLogSVG(); card.append(dl);
+  card.append(el("h3","sh3","The bearing"));
+  BANDS.forEach(([lo,hi,pt,name,txt])=>{
+    const r=el("div","bear"+(total>=lo&&total<=hi?" on":"")), ic=el("span"); ic.innerHTML=CROWN(CC[pt]); ic.firstChild.setAttribute("width","20");
+    const rg=el("b","",hi>999?`${lo}+`:`${lo}-${hi}`); rg.style.color=CC[pt];
+    r.append(ic,rg,el("span","",`${name}. ${txt}`)); card.append(r);
+  });
+  card.append(el("h3","sh3","Your answers"));
   const rows=el("div","rows");
   results.forEach(r=>{
     const d=document.createElement("details"), sm=document.createElement("summary");
-    sm.append(el("span","",r.q.replace("Name a ","").replace("Name ","")),el("span","",`${r.guess} · ${r.pts}`));
-    d.append(sm);
+    sm.append(el("span","",r.q.replace("Name a ","").replace("Name ","")),el("span","",`${r.guess} \u00B7 ${r.pts}`)); d.append(sm);
     const sheet=PROMPTS.find(x=>x.q===r.q), box=el("div","sheet");
     if(sheet){
       Object.keys(sheet.a).map(Number).sort((x,y)=>y-x).forEach(pts=>{
-        const line=el("p"), tag=el("b","",`${TIERS[pts]?TIERS[pts][0]:""} · ${pts}  `); tag.style.color=CC[pts]||"#fff"; line.append(tag);
+        const line=el("p"), tag=el("b","",`${TIERS[pts]?TIERS[pts][0]:""} \u00B7 ${pts}  `); tag.style.color=CC[pts]||"#fff"; line.append(tag);
         sheet.a[pts].forEach((w,k)=>{line.append(el("span",norm(w)===norm(r.guess)?"mine":"",w));if(k<sheet.a[pts].length-1)line.append(", ");});
         box.append(line);
       });
@@ -342,10 +416,8 @@ async function finish(save){
     d.append(box); rows.append(d);
   });
   card.append(rows);
-  const share=el("button","px","Copy result");
-  share.onclick=()=>{navigator.clipboard.writeText(`Crownllion ${today}\n${total} pts · ${total*10} m\n`+results.map(r=>r.pts>=100?"🟨":r.pts>=60?"🟧":r.pts>0?"🟦":"⬛").join(""));share.textContent="Copied";};
-  card.append(share);
-  const note=el("p","",""); note.id="pend"; note.style.marginTop="14px"; card.append(note);
+  card.append(el("h3","sh3","Everyone's answers")); const ev=el("div","rows"); ev.id="ev"; card.append(ev);
+  liveSummary();
   if(save)await saveScore();
 }
 async function saveScore(){
@@ -412,6 +484,7 @@ onAuthStateChanged(auth,u=>{
 /* ---------- Leaderboard ---------- */
 onSnapshot(query(collection(db,"scores"),where("puzzleId","==",today)),snap=>{
   const rows=snap.docs.map(d=>d.data()).sort((a,b)=>b.score-a.score);
+  todayRows=rows; if(document.body.classList.contains("res"))liveSummary();
   const lb=$("lb"); lb.innerHTML="";
   if(!rows.length){lb.append(el("p","","No dives yet today. Be the first in the water."));return;}
   rows.forEach((r,k)=>{
