@@ -3,112 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#050a14">
 <title>Crownllion – the daily dive</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
-:root{--sky:#1b7f9a;--mid:#0b3452;--deep:#06182a;--abyss:#030b14;--ink:#e8f4f8;--mute:#8fb0c0;--line:rgba(143,176,192,.22);--gold:#f5c84b;--aqua:#5ee0d0;--krill:#ff8a6a;--bad:#ff6b7a}
+:root{--cy:#3fd8f0;--pk:#ff4f8b;--ink:#dff3fa;--navy:#0f1b33;--bg:#050a14;--gold:#ffd23f}
 *{box-sizing:border-box;margin:0}
 html,body{min-height:100%}
-body{font-family:"Bricolage Grotesque",system-ui,sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--sky) 0,var(--mid) 18%,var(--deep) 55%,var(--abyss) 100%) fixed;line-height:1.45}
+body{font-family:"VT323",ui-monospace,monospace;font-size:1.35rem;color:var(--ink);background:var(--bg);overflow-x:hidden}
 button,input{font:inherit;color:inherit}
-button{cursor:pointer}
-:focus-visible{outline:2px solid var(--aqua);outline-offset:2px}
-.wrap{max-width:960px;margin:0 auto;padding:20px 16px 56px}
-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
-.logo{font-weight:800;font-size:1.5rem;letter-spacing:-.02em}
-.logo span{color:var(--krill)}
-.who{display:flex;gap:10px;align-items:center;font-size:.9rem;color:var(--mute)}
-.ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:5px 14px;color:var(--ink)}
-.ghost:hover{border-color:var(--aqua)}
-.stage{display:grid;grid-template-columns:84px 1fr;gap:24px;align-items:stretch}
-@media(max-width:560px){.stage{grid-template-columns:56px 1fr;gap:12px}}
-/* depth gauge */
-.gauge{position:relative;min-height:440px;border-radius:999px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(94,224,208,.35),rgba(6,24,42,.2) 40%,rgba(3,11,20,.7));overflow:hidden}
-.gauge i{position:absolute;left:0;right:0;border-top:1px dashed var(--line)}
-.gauge i b{position:absolute;left:50%;transform:translateX(-50%);top:3px;font:600 .65rem/1 inherit;color:var(--mute);font-style:normal}
-#diver{position:absolute;left:50%;top:2%;font-size:1.7rem;transform:translateX(-50%);transition:top 1.1s cubic-bezier(.2,.8,.3,1.1);filter:drop-shadow(0 0 10px rgba(255,138,106,.6))}
-.depth{margin-top:8px;text-align:center;font-weight:800;font-size:1.05rem}
-.depth small{display:block;color:var(--mute);font-weight:400;font-size:.75rem}
-/* card */
-.card{border:1px solid var(--line);border-radius:24px;padding:28px;background:rgba(3,11,20,.55);backdrop-filter:blur(8px);min-height:440px;display:flex;flex-direction:column}
-.top{display:flex;justify-content:space-between;align-items:center;color:var(--mute);font-size:.9rem}
-.dots{display:flex;gap:6px}
-.dots u{width:22px;height:6px;border-radius:3px;background:var(--line);text-decoration:none}
-.dots u.on{background:var(--aqua)}
-.dots u.done{background:var(--krill)}
-.air{height:6px;border-radius:3px;background:var(--line);margin:14px 0 30px;overflow:hidden}
-.air div{height:100%;width:100%;background:var(--aqua);transition:width 1s linear,background .3s}
-.air.low div{background:var(--bad)}
-.q{font-size:clamp(1.8rem,5vw,2.8rem);font-weight:800;letter-spacing:-.025em;line-height:1.08;margin-bottom:26px}
-.q small{display:block;font-size:.95rem;font-weight:400;color:var(--mute);letter-spacing:0;margin-bottom:8px}
-form.g{display:flex;gap:10px;margin-top:auto}
-.g input{flex:1;min-width:0;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:16px;padding:14px 16px;font-size:1.1rem}
-.g input:focus{border-color:var(--aqua);outline:none}
-.go{background:var(--krill);color:#2a0d05;border:0;border-radius:16px;padding:0 24px;font-weight:800}
-.go:disabled,.g input:disabled{opacity:.5;cursor:not-allowed}
-.reveal{min-height:72px;margin-top:18px;font-size:1.05rem}
-.reveal .t{font-weight:800;font-size:1.5rem}
-.reveal.t100 .t{color:var(--gold)}
-.reveal.t0 .t{color:var(--bad)}
-.flash{animation:flash .9s ease-out}
-@keyframes flash{0%{box-shadow:0 0 0 0 rgba(245,200,75,.9)}100%{box-shadow:0 0 0 40px rgba(245,200,75,0)}}
-@media(prefers-reduced-motion:reduce){#diver,.air div{transition:none}.flash{animation:none}}
-/* results */
-.big{font-size:clamp(3rem,10vw,5rem);font-weight:800;letter-spacing:-.04em;line-height:1}
-.rows{margin:18px 0;display:grid;gap:8px}
-.rows div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:8px;font-size:.95rem}
-.rows span:first-child{color:var(--mute)}
-/* board */
-.board{margin-top:28px;border:1px solid var(--line);border-radius:24px;padding:22px 24px;background:rgba(3,11,20,.55)}
-.board h2{font-size:1.15rem;margin-bottom:12px}
-.row{display:grid;grid-template-columns:32px 1fr auto auto;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:.95rem}
-.row:last-child{border:0}
-.row .n{color:var(--mute)}
-.row.me{color:var(--gold)}
-.row em{font-style:normal;color:var(--mute)}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#world{position:fixed;inset:0;z-index:0;background:linear-gradient(180deg,#8fc8e4 0,#e3f1f7 12%,#2a78ab 12.4%,#1c5b8c 15%,#0e3659 22%,#07182e 35%,#050a14 55%,#03060c 100%);background-size:100% 500%;background-position:0 0;transition:background-position 1.8s ease-in-out}
+#sky{position:fixed;inset:0;z-index:1;pointer-events:none;transition:transform 1.8s ease-in-out}
+.cloud{position:absolute;height:auto;image-rendering:pixelated}
+.boat{position:absolute;left:max(6vw,calc(50% - 480px));top:calc(62vh - 150px);width:224px;animation:bob 3.2s steps(4) infinite}
+@keyframes bob{50%{transform:translateY(5px)}}
+.scan{position:fixed;inset:0;z-index:50;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.07) 0 1px,transparent 1px 3px)}
+/* pixel controls */
+.px{letter-spacing:.3em;text-transform:uppercase;background:var(--navy);color:#fff;border:3px solid var(--cy);padding:12px 22px;box-shadow:4px 4px 0 #02050a;cursor:pointer;font-size:1.4rem}
+.px:hover{background:#17294f}
+.px:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #02050a}
+.px:disabled{opacity:.45;cursor:not-allowed}
+.px.sm{padding:4px 12px;font-size:1.1rem;letter-spacing:.15em}
+#who{position:fixed;top:14px;right:14px;z-index:30;display:flex;gap:10px;align-items:center;font-size:1.2rem;text-shadow:2px 2px 0 #02050a}
 /* auth */
-#auth{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(3,11,20,.88);z-index:20}
+#auth{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;padding:9vh 16px 16px;overflow:auto}
 #auth.hidden{display:none}
-.box{width:100%;max-width:360px;background:var(--deep);border:1px solid var(--line);border-radius:24px;padding:26px}
-.box h2{font-size:1.5rem;margin-bottom:4px}
-.box p{color:var(--mute);font-size:.9rem;margin-bottom:16px}
-.box label{display:block;font-size:.85rem;color:var(--mute);margin:12px 0 4px}
-.box input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
-.box .go{width:100%;padding:12px;margin-top:18px}
-.sw{background:none;border:0;color:var(--aqua);margin-top:14px;font-size:.9rem;text-decoration:underline}
-#err{color:var(--bad);font-size:.85rem;margin-top:10px;min-height:1em}
+.title{position:relative;font-size:clamp(3.6rem,15vw,9rem);line-height:1;letter-spacing:.1em;color:transparent;padding-left:.1em}
+.title::before,.title::after{content:attr(data-t);position:absolute;inset:0;padding-left:.1em;-webkit-text-stroke:2px}
+.title::before{-webkit-text-stroke-color:var(--pk);transform:translateX(-3px)}
+.title::after{-webkit-text-stroke-color:var(--cy);transform:translateX(3px)}
+.sub{margin-top:14px;color:var(--cy);font-size:clamp(1.4rem,4vw,2rem);letter-spacing:.5em;padding-left:.5em;text-shadow:2px 2px 0 rgba(5,10,20,.3)}
+.rules{margin-top:10px;font-size:1.2rem;letter-spacing:.12em;color:#274a63;text-align:center}
+.box{margin-top:clamp(70px,22vh,200px);width:min(440px,100%);background:var(--navy);border:3px solid var(--cy);box-shadow:6px 6px 0 #02050a;padding:22px}
+.box h2{font-size:2rem;letter-spacing:.2em;font-weight:400;text-transform:uppercase}
+.box label{display:block;margin:14px 0 4px;color:var(--cy);letter-spacing:.2em;text-transform:uppercase;font-size:1.1rem}
+.box input{width:100%;background:var(--bg);border:2px solid #25507a;padding:8px 12px;font-size:1.5rem}
+.box input:focus{border-color:var(--cy);outline:none}
+.box .px{width:100%;margin-top:20px}
+#err{color:var(--pk);min-height:1.2em;margin-top:10px}
+.sw{background:none;border:0;color:var(--cy);margin-top:12px;text-decoration:underline;cursor:pointer;letter-spacing:.08em}
+/* game */
+main{position:relative;z-index:5;max-width:680px;margin:0 auto;padding:22vh 18px 60px;width:100%}
+body:not(.in) main,body:not(.in) #ruler{display:none}
+.top{display:flex;justify-content:space-between;color:var(--cy);letter-spacing:.15em;text-transform:uppercase;font-size:1.2rem}
+.air{height:14px;margin:12px 0 30px;border:2px solid #25507a;padding:2px}
+.air div{height:100%;width:100%;background:repeating-linear-gradient(90deg,var(--cy) 0 10px,transparent 10px 13px);transition:width 1s linear}
+.air.low div{background:repeating-linear-gradient(90deg,var(--pk) 0 10px,transparent 10px 13px)}
+.q{font-weight:400;font-size:clamp(2.6rem,9vw,4.4rem);line-height:.95;color:#fff;text-shadow:4px 4px 0 #02050a;margin-bottom:28px}
+.q small{display:block;font-size:1.3rem;color:var(--cy);letter-spacing:.2em;text-transform:uppercase;text-shadow:none;margin-bottom:10px}
+form.g{display:flex;gap:12px}
+.g input{flex:1;min-width:0;background:var(--bg);border:3px solid #25507a;padding:8px 14px;font-size:1.7rem}
+.g input:focus{border-color:var(--cy);outline:none}
+.reveal{min-height:84px;margin-top:20px;font-size:1.4rem}
+.reveal .t{font-size:2.6rem;line-height:1;text-shadow:3px 3px 0 #02050a}
+.t0 .t{color:var(--pk)}.t30 .t,.t60 .t{color:var(--cy)}.t85 .t{color:var(--pk)}.t100 .t{color:var(--gold)}
+.ds{font-size:2.4rem;letter-spacing:.3em;text-align:center;margin-top:20vh;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.flash{animation:fl .7s steps(3)}
+@keyframes fl{50%{filter:brightness(2.2)}}
+.big{font-size:clamp(4rem,14vw,7rem);line-height:1;color:#fff;text-shadow:4px 4px 0 var(--pk)}
+.rows{margin:16px 0}
+.rows div{display:flex;justify-content:space-between;gap:12px;border-bottom:2px dashed #25507a;padding:5px 0}
+.rows span:first-child{color:var(--cy)}
+.panel{margin-top:40px;background:rgba(15,27,51,.88);border:3px solid var(--cy);box-shadow:6px 6px 0 #02050a;padding:18px}
+.panel h2{font-weight:400;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px}
+.row{display:grid;grid-template-columns:34px 1fr auto auto;gap:12px;padding:4px 0;border-bottom:2px dashed #25507a}
+.row:last-child{border:0}
+.row.me{color:var(--gold)}
+.row em{font-style:normal;color:var(--cy)}
+/* depth ruler */
+#ruler{position:fixed;z-index:6;right:10px;top:10vh;height:80vh;width:70px;border-right:3px solid #25507a;font-size:1rem;color:#7fb7d4}
+#ruler .tk{position:absolute;right:0;width:100%;text-align:right;padding-right:10px;border-bottom:2px solid #25507a;transform:translateY(-100%)}
+#mk{position:absolute;right:-12px;top:0;transition:top 1.4s steps(14)}
+@media(prefers-reduced-motion:reduce){*,#world,#sky{transition:none!important;animation:none!important}}
+@media(max-width:560px){#ruler{width:48px}.boat{width:150px;top:calc(62vh - 100px)}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="logo">Crown<span>llion</span></div>
-    <div class="who" id="who"></div>
-  </header>
-
-  <div class="stage">
-    <div>
-      <div class="gauge" id="gauge"></div>
-      <div class="depth"><span id="depth">0 m</span><small id="pts">0 pts</small></div>
-    </div>
-    <div class="card" id="card"></div>
-  </div>
-
-  <section class="board">
-    <h2>Today's team dive</h2>
-    <div id="lb"><p style="color:var(--mute)">Loading scores…</p></div>
-  </section>
+<div id="world"></div>
+<div id="sky" aria-hidden="true">
+  <svg width="0" height="0" style="position:absolute"><symbol id="cl" viewBox="0 0 96 32"><path d="M24 0h24v8h16v8h24v8h-8v8H8v-8H0v-8h16v-8h8z" fill="#fff" opacity=".93"/></symbol></svg>
+  <svg class="cloud" style="top:9vh;left:-2vw;width:300px" viewBox="0 0 96 32" shape-rendering="crispEdges"><use href="#cl"/></svg>
+  <svg class="cloud" style="top:3vh;left:calc(50% - 280px);width:360px" viewBox="0 0 96 32" shape-rendering="crispEdges"><use href="#cl"/></svg>
+  <svg class="cloud" style="top:6vh;right:-3vw;width:330px" viewBox="0 0 96 32" shape-rendering="crispEdges"><use href="#cl"/></svg>
+  <svg class="boat" viewBox="0 0 56 40" shape-rendering="crispEdges"><path d="M0 24h56v4h-4v4H8v-4H0z" fill="#0d1f33"/><path d="M20 14h20v10H20z" fill="#0d1f33"/><path d="M29 0h2v14h-2z" fill="#0d1f33"/><path d="M19 2h10v6H19z" fill="#ff5c8a"/><path d="M24 17h3v5h-3zM32 17h3v5h-3z" fill="#5ee0d0"/></svg>
 </div>
+<div class="scan"></div>
+<div id="who"></div>
+<div id="ruler" aria-hidden="true"><svg id="mk" width="26" height="26" viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M5 1h6v2h2v2h2v4h-2v2h-2v2H5v-2H3V9H1V5h2V3h2z" fill="#ff4f8b"/><path d="M9 5h2v2H9z" fill="#050a14"/></svg></div>
+
+<main>
+  <div id="card"></div>
+  <section class="panel"><h2>Today's team dive</h2><div id="lb"><p>Loading scores…</p></div></section>
+</main>
 
 <div id="auth">
+  <h1 class="title" data-t="CROWNLLION">CROWNLLION</h1>
+  <p class="sub">the daily dive</p>
+  <p class="rules">7 prompts · 25 seconds each · rarer answers sink deeper</p>
   <div class="box">
-    <h2 id="a-title">Welcome back</h2>
-    <p id="a-sub">Log in to dive with the team.</p>
+    <h2 id="a-title">Log in</h2>
     <form id="a-form">
       <label for="u">Username</label><input id="u" required autocomplete="username">
       <label for="p">Password</label><input id="p" type="password" required minlength="6" autocomplete="current-password">
-      <button class="go" id="a-btn">Log in</button>
+      <button class="px" id="a-btn">Log in</button>
       <div id="err" role="alert"></div>
     </form>
     <button class="sw" id="a-sw" type="button">New here? Create an account</button>
@@ -128,7 +128,7 @@ const auth = getAuth(app), db = getFirestore(app);
 
 /* ---------- Game data: tier points -> accepted answers ---------- */
 const TIERS = {0:["Not on the sheet"],10:["Plankton"],15:["Too Clever"],30:["Schooler"],60:["Rare"],85:["Deep Cut"],100:["One in a Krillion"]};
-const PROMPTS = [
+let PROMPTS = [
  {q:"Name a type of sausage", a:{10:["bratwurst","hot dog","pepperoni","chorizo","salami"],15:["liverwurst"],30:["kielbasa","andouille","mortadella","bologna","chipolata"],60:["boudin","merguez","lap cheong","cumberland","weisswurst"],85:["sobrasada","nduja","saucisson","zampone","lukanka"],100:["sujuk","blutwurst","isterband","landjager"]}},
  {q:"Name a country in Africa", a:{10:["egypt","nigeria","kenya","south africa"],15:["morocco"],30:["ghana","ethiopia","tanzania","algeria","senegal"],60:["namibia","botswana","malawi","mali","angola"],85:["eswatini","djibouti","burkina faso","lesotho","gabon"],100:["sao tome and principe","comoros","equatorial guinea","eritrea"]}},
  {q:"Name a chess opening", a:{10:["sicilian defense","queens gambit","italian game","ruy lopez"],15:["kings gambit"],30:["french defense","caro-kann","london system","english opening"],60:["scandinavian defense","pirc defense","catalan opening","benoni defense"],85:["alekhine's defense","grunfeld defense","vienna game","budapest gambit"],100:["orangutan opening","grob attack","elephant gambit","latvian gambit"]}},
@@ -138,40 +138,39 @@ const PROMPTS = [
  {q:"Name a famous bridge", a:{10:["golden gate bridge","brooklyn bridge","london bridge"],15:["tower bridge"],30:["rialto bridge","sydney harbour bridge","ponte vecchio","millau viaduct"],60:["charles bridge","pont du gard","bridge of sighs","akashi kaikyo bridge"],85:["stari most","kintai bridge","helix bridge","pont neuf"],100:["khaju bridge","bixby creek bridge","si-o-se-pol","ha'penny bridge"]}}
 ];
 const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();
-PROMPTS.forEach(p=>{p.map={};for(const [pts,list] of Object.entries(p.a))list.forEach(w=>p.map[norm(w)]=+pts);});
+const prep=ps=>{ps.forEach(p=>{p.map={};for(const [pts,l] of Object.entries(p.a))l.forEach(w=>p.map[norm(w)]=+pts);});return ps;}; prep(PROMPTS);
 const lookup=(p,g)=>{const n=norm(g);return p.map[n]??p.map[n.replace(/s$/,"")]??0;};
 const bearing = t => t>=450?"One in a Krillion":t>=351?"Deep Cut":t>=251?"Rare":t>=151?"Schooler":"Plankton";
 
 const TIME=25, MAXDEPTH=7000;
 const today = new Date().toISOString().slice(0,10);
 const $=id=>document.getElementById(id);
-let user=null, i=0, total=0, results=[], timer=null, left=TIME, locked=false, started=null;
+const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;};
+let user=null, i=0, total=0, results=[], timer=null, left=TIME, locked=false;
 
-/* ---------- Gauge ---------- */
-$("gauge").innerHTML = [0,1000,2000,3000,4000,5000,6000,7000].map(m=>`<i style="top:${m/MAXDEPTH*92+4}%"><b>${m}</b></i>`).join("")+`<div id="diver">🦐</div>`;
+/* ---------- Scene: sky lifts away and the sea darkens as you sink ---------- */
+for(let m=0;m<=MAXDEPTH;m+=1000){const t=el("div","tk",m+"m");t.style.top=(m/MAXDEPTH*100)+"%";$("ruler").append(t);}
+function scene(p,lift){$("world").style.backgroundPosition=`0 ${p*100}%`;$("sky").style.transform=`translateY(${-lift}px)`;}
 function sink(){
-  const m=total*10;
-  $("diver").style.top=(2+Math.min(m/MAXDEPTH,1)*92)+"%";
-  $("depth").textContent=m.toLocaleString()+" m";
-  $("pts").textContent=total+" pts";
+  const m=total*10,f=Math.min(m/MAXDEPTH,1);
+  scene(.2+.8*Math.sqrt(f),innerHeight*1.2);
+  $("mk").style.top=`calc(${f*100}% - 13px)`;
+  const d=$("dp"); if(d)d.textContent=`${m.toLocaleString()} m · ${total} pts`;
 }
+scene(0,0);
 
 /* ---------- Game flow ---------- */
-function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
 function showPrompt(){
   const p=PROMPTS[i]; left=TIME; locked=false;
   const card=$("card"); card.innerHTML="";
-  const top=el("div","top"); top.append(el("span","",`Prompt ${i+1} of ${PROMPTS.length}`));
-  const dots=el("div","dots"); PROMPTS.forEach((_,k)=>dots.append(el("u",k<i?"done":k===i?"on":"")));
-  top.append(dots); card.append(top);
+  const top=el("div","top"); top.append(el("span","",`Prompt ${i+1}/${PROMPTS.length}`)); const dp=el("span"); dp.id="dp"; top.append(dp); card.append(top);
   const air=el("div","air"); air.id="air"; air.append(el("div")); card.append(air);
-  const q=el("h1","q"); q.append(el("small","","Rarest valid answer wins")); q.append(p.q); card.append(q);
-  const f=el("form","g"); f.innerHTML=`<input id="gi" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="Type your answer"><button class="go" id="gb">Dive</button>`;
+  const q=el("h1","q"); q.append(el("small","","rarest valid answer wins")); q.append(p.q); card.append(q);
+  const f=el("form","g"); f.innerHTML=`<input id="gi" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="type your answer"><button class="px" id="gb">Dive</button>`;
   card.append(f); const rv=el("div","reveal"); rv.id="rv"; rv.setAttribute("aria-live","polite"); card.append(rv);
   f.addEventListener("submit",e=>{e.preventDefault();answer($("gi").value);});
-  $("gi").focus(); tick(true);
-  clearInterval(timer);
-  timer=setInterval(tick,1000);
+  sink(); $("gi").focus(); tick(true);
+  clearInterval(timer); timer=setInterval(tick,1000);
 }
 function tick(init){
   if(!init)left--;
@@ -185,12 +184,12 @@ function answer(g){
   const p=PROMPTS[i], pts=g.trim()?lookup(p,g):0;
   total+=pts; results.push({q:p.q,guess:g.trim()||"(no answer)",pts});
   $("gi").disabled=true; $("gb").disabled=true;
-  const rv=$("rv"); rv.className="reveal t"+pts;
-  rv.innerHTML=""; rv.append(el("div","t",TIERS[pts][0]));
-  rv.append(el("div","",pts?`+${pts} pts · ${pts*10} m deeper`:"No points. Rarity only counts if the answer fits the prompt."));
+  const rv=$("rv"); rv.className="reveal t"+pts; rv.innerHTML="";
+  rv.append(el("div","t",TIERS[pts][0]));
+  rv.append(el("div","",pts?`+${pts} pts · ${pts*10} m deeper`:"no points. the answer has to fit the prompt."));
   if(pts===100)$("card").classList.add("flash");
   sink();
-  setTimeout(()=>{$("card").classList.remove("flash");i++;i<PROMPTS.length?showPrompt():finish(true);},1700);
+  setTimeout(()=>{$("card").classList.remove("flash");i++;i<PROMPTS.length?showPrompt():finish(true);},1900);
 }
 async function finish(save){
   clearInterval(timer);
@@ -201,15 +200,21 @@ async function finish(save){
   const rows=el("div","rows");
   results.forEach(r=>{const d=el("div");d.append(el("span","",r.q.replace("Name a ","").replace("Name ","")),el("span","",`${r.guess} · ${r.pts}`));rows.append(d);});
   card.append(rows);
-  const share=el("button","go","Copy result"); share.style.padding="12px 22px";
+  const share=el("button","px","Copy result");
   share.onclick=()=>{navigator.clipboard.writeText(`Crownllion ${today}\n${total} pts · ${total*10} m\n`+results.map(r=>r.pts>=100?"🟨":r.pts>=60?"🟧":r.pts>0?"🟦":"⬛").join(""));share.textContent="Copied";};
   card.append(share);
-  if(save){try{await setDoc(doc(db,"scores",`${today}_${user.uid}`),{user:user.displayName||user.email.split("@")[0],uid:user.uid,score:total,puzzleId:today,results,createdAt:serverTimestamp()});}catch(e){console.error(e);}}
+  const note=el("p","",""); note.id="pend"; note.style.marginTop="14px"; card.append(note);
+  if(save)await saveScore();
+}
+async function saveScore(){
+  const n=$("pend");
+  try{await setDoc(doc(db,"scores",`${today}_${user.uid}`),{user:user.displayName||user.email.split("@")[0],uid:user.uid,score:total,puzzleId:today,results,createdAt:serverTimestamp()});if(n)n.textContent="Score saved to the leaderboard.";}
+  catch(e){console.error(e);if(n)n.textContent="Couldn't save score ("+(e.code||e.message)+"). Check your Firestore rules.";}
 }
 
-/* ---------- Auth ---------- */
+/* ---------- Auth (shown first) ---------- */
 let signup=false;
-const setMode=s=>{signup=s;$("a-title").textContent=s?"Join the team":"Welcome back";$("a-sub").textContent=s?"Pick a username and password.":"Log in to dive with the team.";$("a-btn").textContent=s?"Create account":"Log in";$("a-sw").textContent=s?"Already have an account? Log in":"New here? Create an account";$("err").textContent="";};
+const setMode=s=>{signup=s;$("a-title").textContent=s?"Sign up":"Log in";$("a-btn").textContent=s?"Create account":"Log in";$("a-sw").textContent=s?"Already have an account? Log in":"New here? Create an account";$("err").textContent="";};
 $("a-sw").onclick=()=>setMode(!signup);
 $("a-form").addEventListener("submit",async e=>{
   e.preventDefault(); $("err").textContent="";
@@ -219,33 +224,50 @@ $("a-form").addEventListener("submit",async e=>{
     else await signInWithEmailAndPassword(auth,email,pw);
   }catch(err){$("err").textContent=err.message.replace("Firebase: ","");}
 });
+
 let begun=null;
+/* Questions: Firestore dives/<YYYY-MM-DD>, then dives/default, then the built-in set */
+async function loadPrompts(){
+  for(const id of [today,"default"]){
+    try{
+      const s=await getDoc(doc(db,"dives",id));
+      if(s.exists()&&Array.isArray(s.data().prompts)&&s.data().prompts.length){console.log("Loaded prompts from dives/"+id);return prep(s.data().prompts);}
+    }catch(e){console.warn("Couldn't read dives/"+id+":",e.code||e.message);}
+  }
+  console.log("Using built-in prompts");
+  return PROMPTS;
+}
 async function begin(u){
   if(begun===u.uid)return; begun=u.uid; user=u;
-  $("auth").classList.add("hidden");
+  $("auth").classList.add("hidden"); document.body.classList.add("in");
   const w=$("who"); w.innerHTML=""; w.append(el("span","",u.displayName||u.email.split("@")[0]));
-  const out=el("button","ghost","Log out"); out.onclick=()=>signOut(auth); w.append(out);
-  total=0;i=0;results=[];sink();
-  const snap=await getDoc(doc(db,"scores",`${today}_${u.uid}`));
-  if(snap.exists()){const d=snap.data();total=d.score;results=d.results||[];sink();finish(false);}
-  else showPrompt();
+  const out=el("button","px sm","Log out"); out.onclick=()=>signOut(auth); w.append(out);
+  total=0;i=0;results=[];
+  $("card").innerHTML=""; $("card").append(el("p","ds","descending…")); sink();
+  const wait=new Promise(r=>setTimeout(r,1900));
+  try{
+    const snap=await getDoc(doc(db,"scores",`${today}_${u.uid}`));
+    if(snap.exists()){const d=snap.data();total=d.score;results=d.results||[];await wait;sink();finish(false);return;}
+  }catch(e){console.warn("Couldn't check today's score:",e.code||e.message);}
+  const [ps]=await Promise.all([loadPrompts(),wait]);
+  PROMPTS=ps; showPrompt();
 }
 onAuthStateChanged(auth,u=>{
   if(u)begin(u);
-  else{begun=null;user=null;clearInterval(timer);$("who").innerHTML="";$("auth").classList.remove("hidden");}
+  else{begun=null;user=null;clearInterval(timer);$("who").innerHTML="";$("card").innerHTML="";document.body.classList.remove("in");scene(0,0);$("auth").classList.remove("hidden");}
 });
 
 /* ---------- Leaderboard ---------- */
 onSnapshot(query(collection(db,"scores"),where("puzzleId","==",today)),snap=>{
   const rows=snap.docs.map(d=>d.data()).sort((a,b)=>b.score-a.score);
   const lb=$("lb"); lb.innerHTML="";
-  if(!rows.length){lb.append(el("p","","No dives yet today. Be the first in the water."));lb.lastChild.style.color="var(--mute)";return;}
+  if(!rows.length){lb.append(el("p","","No dives yet today. Be the first in the water."));return;}
   rows.forEach((r,k)=>{
     const d=el("div","row"+(user&&r.uid===user.uid?" me":""));
-    d.append(el("span","n",k+1),el("span","",r.user),el("em","",(r.score*10).toLocaleString()+" m"),el("strong","",r.score+" pts"));
+    d.append(el("span","",k+1),el("span","",r.user),el("em","",(r.score*10).toLocaleString()+" m"),el("strong","",r.score+" pts"));
     lb.append(d);
   });
-});
+},err=>{console.error(err);$("lb").textContent="Couldn't load scores ("+err.code+"). Check your Firestore rules.";});
 </script>
 </body>
 </html>
