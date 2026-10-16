@@ -15,10 +15,11 @@ html,body{min-height:100%}
 body{font-family:"VT323",ui-monospace,monospace;font-size:1.35rem;color:var(--ink);background:var(--bg);overflow-x:hidden}
 button,input{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-#world{position:fixed;inset:0;z-index:0;background:linear-gradient(180deg,#8fc8e4 0,#e3f1f7 12%,#2a78ab 12.4%,#1c5b8c 15%,#0e3659 22%,#07182e 35%,#050a14 55%,#03060c 100%);background-size:100% 500%;background-position:0 0;transition:background-position 1.8s ease-in-out}
+#world{position:fixed;inset:0;z-index:0;background-color:#8fc8e4;background-image:linear-gradient(180deg,#8fc8e4 0,#e3f1f7 5.4%,#2a78ab 5.6%,#1c5b8c 8%,#0e3659 16%,#07182e 30%,#050a14 50%,#03060c 100%);background-size:100% 500%;background-repeat:no-repeat;background-position:0 0;transition:background-position 1.8s ease-in-out}
+#bw{position:fixed;inset:0;z-index:1;pointer-events:none;transition:transform 1.8s ease-in-out}
 #sky{position:fixed;inset:0;z-index:1;pointer-events:none;transition:transform 1.8s ease-in-out}
 .cloud{position:absolute;height:auto;image-rendering:pixelated}
-.boat{position:absolute;left:max(6vw,calc(50% - 480px));top:calc(62vh - 150px);width:224px;animation:bob 3.2s steps(4) infinite}
+.boat{position:absolute;left:max(6vw,calc(50% - 480px));top:calc(28vh - 128px);width:224px;animation:bob 3.2s steps(4) infinite}
 @keyframes bob{50%{transform:translateY(5px)}}
 .scan{position:fixed;inset:0;z-index:50;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.07) 0 1px,transparent 1px 3px)}
 /* pixel controls */
@@ -50,8 +51,9 @@ button,input{font:inherit;color:inherit}
 .dive-no{margin-top:14px;color:var(--cy);letter-spacing:.2em;font-size:1.15rem;text-shadow:2px 2px 0 #02050a}
 .sw{background:none;border:0;color:var(--cy);margin-top:12px;text-decoration:underline;cursor:pointer;letter-spacing:.08em}
 /* game */
-main{position:relative;z-index:5;max-width:680px;margin:0 auto;padding:22vh 18px 60px;width:100%}
-body:not(.in) main,body:not(.in) #ruler{display:none}
+main{position:relative;z-index:5;max-width:680px;margin:0 auto;padding:25vh 18px 130px;width:100%}
+body:not(.in) main,body:not(.in) #ruler,body:not(.in) #hud,body:not(.in) #bar,body:not(.in) #fish,body:not(.in) #pc{display:none}
+body.in #who{top:96px;left:8px;right:auto;flex-direction:column;align-items:flex-start;gap:6px}
 .top{display:flex;justify-content:space-between;color:var(--cy);letter-spacing:.15em;text-transform:uppercase;font-size:1.2rem}
 .clock{display:flex;align-items:center;gap:14px;margin:10px 0 26px}
 .secs{font-size:3.4rem;line-height:1;min-width:2ch;text-align:right;color:#fff;text-shadow:3px 3px 0 #02050a}
@@ -100,7 +102,42 @@ body:not(.res) .panel{display:none}
 #ruler .tk{position:absolute;right:0;width:100%;text-align:right;padding-right:10px;border-bottom:2px solid #25507a;transform:translateY(-100%)}
 #mk{position:absolute;right:-12px;top:0;transition:top 1.4s steps(14)}
 @media(prefers-reduced-motion:reduce){*,#world,#sky{transition:none!important;animation:none!important}}
-@media(max-width:560px){#ruler{width:48px}.boat{width:150px;top:calc(62vh - 100px)}}
+@media(max-width:560px){#ruler{width:48px}.boat{width:150px;top:calc(28vh - 86px)}.hp{width:96px!important;padding:8px 10px!important}.hp b{font-size:1.7rem!important}#hud{gap:8px!important}}
+/* game screen */
+:root{--n:polygon(0 8px,8px 8px,8px 0,calc(100% - 8px) 0,calc(100% - 8px) 8px,100% 8px,100% calc(100% - 8px),calc(100% - 8px) calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,8px calc(100% - 8px),0 calc(100% - 8px))}
+#hud{position:fixed;top:0;left:0;right:0;z-index:30;display:flex;justify-content:center;gap:clamp(16px,16vw,330px);padding:6px 12px;align-items:flex-start;pointer-events:none}
+.hp{width:150px;padding:10px 18px;background:rgba(5,10,20,.9);clip-path:var(--n)}
+.hp small,.pg small{display:block;letter-spacing:.3em;font-size:.95rem;color:#7fb7d4;text-transform:uppercase}
+.hp b{display:block;font-weight:400;font-size:2.2rem;line-height:1;color:var(--cy)}
+.hp.r{text-align:right}.hp.r b{color:var(--pk)}
+.pg{text-align:center;padding-top:22px}
+#seg{display:flex;gap:2px;justify-content:center}
+#seg i{width:18px;height:18px;background:var(--navy);border:2px solid #02050a}
+.pg small{margin-top:6px;font-size:.9rem}
+.pcard{width:min(600px,100%);margin:0 auto;background:rgba(5,10,20,.84);padding:22px 30px;clip-path:var(--n)}
+.pcard .pl{display:block;color:var(--pk);letter-spacing:.3em;text-transform:uppercase;font-size:1.1rem}
+.pcard .q{font-size:clamp(2rem,5.5vw,3rem);line-height:1.1;margin:10px 0}
+.hint{color:#7fb7d4;letter-spacing:.2em;font-size:1.05rem}
+.miss{color:var(--pk);min-height:1.3em;margin-top:6px}
+.rcard{text-align:center;padding-top:4vh}
+.rt{font-weight:400;font-size:clamp(3rem,9vw,5.5rem);line-height:1;letter-spacing:.08em;text-transform:uppercase;text-shadow:4px 4px 0 #02050a;color:#a9bccb}
+.ra{font-size:2rem;margin-top:14px}.rp{font-size:2.4rem;color:var(--pk);margin-top:6px;text-transform:uppercase}.rf{color:#7fb7d4;letter-spacing:.12em;margin-top:8px}
+#bar{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:34px 16px 22px;display:flex;justify-content:center;background:linear-gradient(180deg,transparent,rgba(3,8,16,.96) 45%)}
+#bar.hidden{display:none}
+#gf{display:flex;gap:14px;align-items:flex-start;width:min(760px,100%)}
+.dial{width:78px;height:78px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:2.4rem;color:var(--cy);background:radial-gradient(circle,#091426 0 56%,transparent 58%),conic-gradient(var(--c,var(--cy)) var(--p,100%),#14264a 0)}
+.dial.low{--c:var(--pk);color:var(--pk)}
+.mid{flex:1;min-width:0;padding-top:10px}
+.mid input{width:100%;height:58px;background:#050a14;border:3px solid var(--cy);padding:4px 16px;font-size:1.8rem}
+.mid input:focus{outline:none;box-shadow:0 0 0 3px rgba(63,216,240,.25)}
+#bar .air{height:6px;margin:6px 0 0;border:0;padding:0;background:#10203c}
+#bar .air div{background:var(--cy)}#bar .air.low div{background:var(--pk)}
+.px.pink{background:var(--pk);border-color:var(--pk);color:#fff;height:58px;margin-top:10px}
+.px.dsc{width:min(420px,90vw);font-size:1.8rem;letter-spacing:.35em;border-width:4px}
+#fish{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.fish{position:absolute;left:0;animation:swim linear infinite}
+@keyframes swim{from{transform:translateX(-60px)}to{transform:translateX(calc(100vw + 60px))}}
+#pc{position:fixed;left:24px;top:72vh;z-index:6;width:46px;filter:drop-shadow(0 0 12px rgba(255,210,63,.7));animation:bob 3s steps(4) infinite}
 </style>
 </head>
 <body>
@@ -110,9 +147,14 @@ body:not(.res) .panel{display:none}
   <svg class="cloud" style="top:9vh;left:-2vw;width:300px" viewBox="0 0 96 32" shape-rendering="crispEdges"><use href="#cl"/></svg>
   <svg class="cloud" style="top:3vh;left:calc(50% - 280px);width:360px" viewBox="0 0 96 32" shape-rendering="crispEdges"><use href="#cl"/></svg>
   <svg class="cloud" style="top:6vh;right:-3vw;width:330px" viewBox="0 0 96 32" shape-rendering="crispEdges"><use href="#cl"/></svg>
-  <svg class="boat" viewBox="0 0 56 40" shape-rendering="crispEdges"><path d="M0 24h56v4h-4v4H8v-4H0z" fill="#0d1f33"/><path d="M20 14h20v10H20z" fill="#0d1f33"/><path d="M29 0h2v14h-2z" fill="#0d1f33"/><path d="M19 2h10v6H19z" fill="#ff5c8a"/><path d="M24 17h3v5h-3zM32 17h3v5h-3z" fill="#5ee0d0"/></svg>
+  
 </div>
+<div id="bw" aria-hidden="true"><svg class="boat" viewBox="0 0 56 40" shape-rendering="crispEdges"><path d="M0 24h56v4h-4v4H8v-4H0z" fill="#0d1f33"/><path d="M20 14h20v10H20z" fill="#0d1f33"/><path d="M29 0h2v14h-2z" fill="#0d1f33"/><path d="M19 2h10v6H19z" fill="#ff5c8a"/><path d="M24 17h3v5h-3zM32 17h3v5h-3z" fill="#5ee0d0"/></svg></div>
+<div id="fish" aria-hidden="true"></div>
 <div class="scan"></div>
+<div id="hud"><div class="hp"><small>Depth</small><b id="hd">0m</b></div><div class="pg"><div id="seg"></div><small id="pl">Prompt 1 of 7</small></div><div class="hp r"><small>Score</small><b id="hs">0</b></div></div>
+<div id="pc" aria-hidden="true"><svg viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="#ffd23f" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg></div>
+<div id="bar" class="hidden"></div>
 <div id="crown" class="hidden" aria-live="polite"></div>
 <div id="who"></div>
 <div id="ruler" aria-hidden="true"><svg id="mk" width="32" height="22" viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="#ffd23f" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg></div>
@@ -184,60 +226,69 @@ let tries=[], user=null, i=0, total=0, results=[], timer=null, left=TIME, locked
 
 /* ---------- Scene: sky lifts away and the sea darkens as you sink ---------- */
 for(let m=0;m<=MAXDEPTH;m+=1000){const t=el("div","tk",m+"m");t.style.top=(m/MAXDEPTH*100)+"%";$("ruler").append(t);}
-function scene(p,lift){$("world").style.backgroundPosition=`0 ${p*100}%`;$("sky").style.transform=`translateY(${-lift}px)`;}
+function scene(p,off=0){const y=-p*4*innerHeight;$("world").style.backgroundPosition=`0 ${y+off}px`;$("sky").style.transform=`translateY(${y}px)`;$("bw").style.transform=`translateY(${y+off}px)`;}
+const home=()=>scene(0,innerHeight*.34);
+const FLAVOR={10:"the answer everyone blurts out.",15:"too clever. everyone reaches for it.",30:"swimming with the school.",60:"a rare find.",85:"a deep cut.",100:"one in a krillion."};
+function hud(){
+  const sg=$("seg"); sg.innerHTML="";
+  PROMPTS.forEach((_,k)=>{const b=document.createElement("i");
+    if(k<results.length)b.style.background=results[k].pts?CC[results[k].pts]:"#5a6b7d";
+    else if(k===results.length)b.style.background="var(--pk)";
+    sg.append(b);});
+  $("pl").textContent=`Prompt ${Math.min(results.length+1,PROMPTS.length)} of ${PROMPTS.length}`;
+}
 function sink(){
   const m=total*10,f=Math.min(m/MAXDEPTH,1);
-  scene(.2+.8*Math.sqrt(f),innerHeight*1.2);
-  $("mk").style.top=`calc(${f*100}% - 13px)`;
-  const d=$("dp"); if(d)d.textContent=`${m.toLocaleString()} m · ${total} pts`;
+  scene(Math.sqrt(f)*.9,0);
+  $("mk").style.top=`calc(${f*100}% - 11px)`;
+  $("hd").textContent=m.toLocaleString()+"m"; $("hs").textContent=total; hud();
 }
-scene(0,0);
+home();
+for(let k=0;k<6;k++){const f=el("div","fish");f.style.cssText=`top:${38+Math.random()*52}vh;animation-duration:${40+Math.random()*50}s;animation-delay:-${Math.random()*60}s`;f.innerHTML='<svg viewBox="0 0 14 6" width="28" shape-rendering="crispEdges"><path fill="#06223d" d="M0 0l3 3-3 3zM3 1h8v4H3zM11 2h3v2h-3z"/></svg>';$("fish").append(f);}
 
 /* ---------- Game flow ---------- */
 function showPrompt(){
   const p=PROMPTS[i]; left=TIME; locked=false; tries=[]; document.body.classList.remove("res");
-  const card=$("card"); card.innerHTML="";
-  const top=el("div","top"); top.append(el("span","",`Prompt ${i+1}/${PROMPTS.length}`)); const dp=el("span"); dp.id="dp"; top.append(dp); card.append(top);
-  const clock=el("div","clock"); const secs=el("span","secs",String(TIME)); secs.id="secs"; const air=el("div","air"); air.id="air"; air.append(el("div")); clock.append(secs,air); card.append(clock);
-  const q=el("h1","q"); q.append(el("small","","rarest valid answer wins")); q.append(p.q); card.append(q);
-  const f=el("form","g"); f.innerHTML=`<input id="gi" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="type your answer"><button class="px" id="gb">Dive</button>`;
-  card.append(f); const rv=el("div","reveal"); rv.id="rv"; rv.setAttribute("aria-live","polite"); card.append(rv);
-  f.addEventListener("submit",e=>{e.preventDefault();guess($("gi").value);});
+  const card=$("card"); card.className="pcard"; card.innerHTML="";
+  card.append(el("small","pl",`Prompt ${i+1} of ${PROMPTS.length}`),el("h1","q",p.q),el("p","hint","\u25BC rarer answers sink deeper \u25BC"));
+  const rv=el("p","miss"); rv.id="rv"; rv.setAttribute("aria-live","polite"); card.append(rv);
+  const bar=$("bar"); bar.className="";
+  bar.innerHTML=`<form id="gf"><div class="dial" id="dial"><span id="secs">${TIME}</span></div><div class="mid"><input id="gi" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="type your answer"><div class="air" id="air"><div></div></div></div><button class="px pink" id="gb">Dive</button></form>`;
+  $("gf").addEventListener("submit",e=>{e.preventDefault();guess($("gi").value);});
   sink(); $("gi").focus(); tick(true);
   clearInterval(timer); timer=setInterval(tick,1000);
 }
 function tick(init){
   if(!init)left--;
   const a=$("air"); if(!a)return;
-  a.firstChild.style.width=Math.max(left,0)/TIME*100+"%";
-  a.classList.toggle("low",left<=8);
-  const sc=$("secs"); sc.textContent=Math.max(left,0); sc.classList.toggle("low",left<=8);
-  if(left<=0)settle("");
+  const l=Math.max(left,0), low=left<=8, dl=$("dial");
+  a.firstChild.style.width=l/TIME*100+"%"; a.classList.toggle("low",low);
+  dl.style.setProperty("--p",l/TIME*100+"%"); dl.classList.toggle("low",low); $("secs").textContent=l;
+  if(left<=0)settle("",true);
 }
-/* A guess that isn't on the answer sheet doesn't end the prompt: keep trying until the clock runs out */
+/* a guess that isn't on the answer sheet doesn't end the prompt */
 function guess(g){
   if(locked)return; g=g.trim(); if(!g)return;
   if(lookup(PROMPTS[i],g))return settle(g);
   const dupe=tries.includes(norm(g)); if(!dupe)tries.push(norm(g));
-  const rv=$("rv"); rv.className="reveal t0"; rv.innerHTML="";
-  rv.append(el("div","t",dupe?"already tried":"not on the sheet"));
-  rv.append(el("div","","try another answer. the clock is still running."));
+  $("rv").textContent=dupe?"already tried. think rarer.":"not on the sheet. try another.";
   const gi=$("gi"); gi.value=""; gi.focus();
 }
-function settle(g){
+function settle(g,timedout){
   if(locked)return; locked=true; clearInterval(timer);
   const p=PROMPTS[i], pts=g.trim()?lookup(p,g):0;
   total+=pts; results.push({q:p.q,guess:g.trim()||"(no answer)",pts,tries:tries.length});
-  $("gi").disabled=true; $("gb").disabled=true;
-  const rv=$("rv"); rv.className="reveal t"+pts; rv.innerHTML="";
-  rv.append(el("div","t",TIERS[pts][0]));
-  rv.append(el("div","",pts?`+${pts} pts · ${pts*10} m deeper`:"no points. the answer has to fit the prompt."));
-  if(pts)showCrown(pts);
-  sink();
-  setTimeout(()=>{$("card").classList.remove("flash");i++;i<PROMPTS.length?showPrompt():finish(true);},1900);
+  const card=$("card"); card.className="rcard"; card.innerHTML="";
+  const h=el("h1","rt",pts?TIERS[pts][0]:"Nothing landed"); h.style.color=CC[pts]||"#a9bccb";
+  card.append(h,el("p","ra",g.trim()||"\u2014"),el("p","rp",`+${pts} pts`),el("p","rf",pts?FLAVOR[pts]:(timedout?"the clock beat you to it.":"that answer didn't fit.")));
+  const bar=$("bar"); bar.innerHTML="";
+  const nb=el("button","px dsc",i+1<PROMPTS.length?"Descend \u25BC":"Results \u25BC");
+  nb.onclick=()=>{i++;i<PROMPTS.length?showPrompt():finish(true);};
+  bar.append(nb); nb.focus();
+  if(pts)showCrown(pts); sink();
 }
 async function finish(save){
-  clearInterval(timer); document.body.classList.add("res");
+  clearInterval(timer); document.body.classList.add("res"); $("bar").className="hidden"; $("card").className="";
   const card=$("card"); card.innerHTML="";
   card.append(el("div","top",`Dive complete · ${today}`));
   card.append(el("div","big",total.toLocaleString()+" pts"));
@@ -322,7 +373,7 @@ $("go").onclick=async()=>{
 };
 onAuthStateChanged(auth,u=>{
   if(u)begin(u);
-  else{begun=null;user=null;played=false;clearInterval(timer);$("who").innerHTML="";$("card").innerHTML="";document.body.classList.remove("in","res");scene(0,0);$("home").classList.add("hidden");$("box").classList.remove("hidden");$("auth").classList.remove("hidden");}
+  else{begun=null;user=null;played=false;clearInterval(timer);$("who").innerHTML="";$("card").innerHTML="";document.body.classList.remove("in","res");home();$("home").classList.add("hidden");$("box").classList.remove("hidden");$("auth").classList.remove("hidden");}
 });
 
 /* ---------- Leaderboard ---------- */
