@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#050a14">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 11%27%3E%3Cpath fill=%27%23ffd23f%27 d=%27M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM1 4h14v7H1z%27/%3E%3C/svg%3E">
 <title>Crownllion – the daily dive</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -73,8 +74,20 @@ form.g{display:flex;gap:12px}
 @keyframes fl{50%{filter:brightness(2.2)}}
 .big{font-size:clamp(4rem,14vw,7rem);line-height:1;color:#fff;text-shadow:4px 4px 0 var(--pk)}
 .rows{margin:16px 0}
-.rows div{display:flex;justify-content:space-between;gap:12px;border-bottom:2px dashed #25507a;padding:5px 0}
-.rows span:first-child{color:var(--cy)}
+.rows details{border-bottom:2px dashed #25507a;padding:5px 0}
+.rows summary{display:flex;gap:12px;cursor:pointer;list-style:none}
+.rows summary::-webkit-details-marker{display:none}
+.rows summary span:first-child{flex:1;color:var(--cy)}
+.rows summary::after{content:"\25BE";color:var(--cy)}
+.rows details[open] summary::after{content:"\25B4"}
+.sheet{margin:8px 0 6px;padding:10px 12px;background:rgba(5,10,20,.6);border-left:3px solid var(--cy);font-size:1.15rem}
+.sheet p{margin:0 0 8px}.sheet b{font-weight:400}
+.sheet .mine{color:var(--gold);text-decoration:underline}
+#crown{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,10,20,.62);pointer-events:none}
+#crown svg{width:min(55vw,250px);height:auto;filter:drop-shadow(6px 6px 0 #02050a);animation:pop .5s steps(5) both}
+#crown.gold svg{filter:drop-shadow(0 0 26px #ffd23f) drop-shadow(6px 6px 0 #02050a)}
+#crown p{font-size:2.8rem;letter-spacing:.2em;text-transform:uppercase;margin-top:14px;text-shadow:3px 3px 0 #02050a;line-height:1}
+@keyframes pop{0%{transform:scale(.2) rotate(-10deg);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
 body:not(.res) .panel{display:none}
 .panel{margin-top:40px;background:rgba(15,27,51,.88);border:3px solid var(--cy);box-shadow:6px 6px 0 #02050a;padding:18px}
 .panel h2{font-weight:400;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px}
@@ -100,12 +113,14 @@ body:not(.res) .panel{display:none}
   <svg class="boat" viewBox="0 0 56 40" shape-rendering="crispEdges"><path d="M0 24h56v4h-4v4H8v-4H0z" fill="#0d1f33"/><path d="M20 14h20v10H20z" fill="#0d1f33"/><path d="M29 0h2v14h-2z" fill="#0d1f33"/><path d="M19 2h10v6H19z" fill="#ff5c8a"/><path d="M24 17h3v5h-3zM32 17h3v5h-3z" fill="#5ee0d0"/></svg>
 </div>
 <div class="scan"></div>
+<div id="crown" class="hidden" aria-live="polite"></div>
 <div id="who"></div>
-<div id="ruler" aria-hidden="true"><svg id="mk" width="26" height="26" viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M5 1h6v2h2v2h2v4h-2v2h-2v2H5v-2H3V9H1V5h2V3h2z" fill="#ff4f8b"/><path d="M9 5h2v2H9z" fill="#050a14"/></svg></div>
+<div id="ruler" aria-hidden="true"><svg id="mk" width="32" height="22" viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="#ffd23f" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg></div>
 
 <main>
   <div id="card"></div>
   <section class="panel"><h2>Today's team dive</h2><div id="lb"><p>Loading scores…</p></div></section>
+  <section class="panel"><h2>All-time scoreboard</h2><div id="all"><p>Loading scores…</p></div></section>
 </main>
 
 <div id="auth">
@@ -131,13 +146,13 @@ body:not(.res) .panel{display:none}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeFirestore, collection, doc, getDoc, setDoc, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyDtvXvvKSDW4w781kYm2e4lg47cC7Lx6NY", authDomain:"crownllion.firebaseapp.com", projectId:"crownllion",
   storageBucket:"crownllion.firebasestorage.app", messagingSenderId:"65215415079", appId:"1:65215415079:web:5558871761efd11e48df02"
 });
-const auth = getAuth(app), db = getFirestore(app);
+const auth = getAuth(app), db = initializeFirestore(app,{experimentalAutoDetectLongPolling:true});
 
 /* ---------- Game data: tier points -> accepted answers ---------- */
 const TIERS = {0:["Not on the sheet"],10:["Plankton"],15:["Too Clever"],30:["Schooler"],60:["Rare"],85:["Deep Cut"],100:["One in a Krillion"]};
@@ -155,6 +170,12 @@ const prep=ps=>{ps.forEach(p=>{p.map={};for(const [pts,l] of Object.entries(p.a)
 const lookup=(p,g)=>{const n=norm(g);return p.map[n]??p.map[n.replace(/s$/,"")]??0;};
 const bearing = t => t>=450?"One in a Krillion":t>=351?"Deep Cut":t>=251?"Rare":t>=151?"Schooler":"Plankton";
 
+const CC={10:"#9aa7b4",15:"#5fd38d",30:"#4aa8ff",60:"#b46bff",85:"#ff4f8b",100:"#ffd23f"};
+const CROWN=c=>`<svg viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="${c}" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg>`;
+function showCrown(pts){
+  const c=$("crown"); c.innerHTML=CROWN(CC[pts])+`<p style="color:${CC[pts]}">${TIERS[pts][0]}</p><p style="font-size:1.8rem">+${pts} pts</p>`;
+  c.className=pts===100?"gold":""; setTimeout(()=>c.classList.add("hidden"),1700);
+}
 const TIME=25, MAXDEPTH=7000;
 const today = new Date().toISOString().slice(0,10);
 const $=id=>document.getElementById(id);
@@ -211,7 +232,7 @@ function settle(g){
   const rv=$("rv"); rv.className="reveal t"+pts; rv.innerHTML="";
   rv.append(el("div","t",TIERS[pts][0]));
   rv.append(el("div","",pts?`+${pts} pts · ${pts*10} m deeper`:"no points. the answer has to fit the prompt."));
-  if(pts===100)$("card").classList.add("flash");
+  if(pts)showCrown(pts);
   sink();
   setTimeout(()=>{$("card").classList.remove("flash");i++;i<PROMPTS.length?showPrompt():finish(true);},1900);
 }
@@ -222,7 +243,20 @@ async function finish(save){
   card.append(el("div","big",total.toLocaleString()+" pts"));
   card.append(el("p","",`${(total*10).toLocaleString()} m deep. You reached ${bearing(total)} depth.`));
   const rows=el("div","rows");
-  results.forEach(r=>{const d=el("div");d.append(el("span","",r.q.replace("Name a ","").replace("Name ","")),el("span","",`${r.guess} · ${r.pts}`));rows.append(d);});
+  results.forEach(r=>{
+    const d=document.createElement("details"), sm=document.createElement("summary");
+    sm.append(el("span","",r.q.replace("Name a ","").replace("Name ","")),el("span","",`${r.guess} · ${r.pts}`));
+    d.append(sm);
+    const sheet=PROMPTS.find(x=>x.q===r.q), box=el("div","sheet");
+    if(sheet){
+      Object.keys(sheet.a).map(Number).sort((x,y)=>y-x).forEach(pts=>{
+        const line=el("p"), tag=el("b","",`${TIERS[pts]?TIERS[pts][0]:""} · ${pts}  `); tag.style.color=CC[pts]||"#fff"; line.append(tag);
+        sheet.a[pts].forEach((w,k)=>{line.append(el("span",norm(w)===norm(r.guess)?"mine":"",w));if(k<sheet.a[pts].length-1)line.append(", ");});
+        box.append(line);
+      });
+    }else box.textContent="Answer sheet not available.";
+    d.append(box); rows.append(d);
+  });
   card.append(rows);
   const share=el("button","px","Copy result");
   share.onclick=()=>{navigator.clipboard.writeText(`Crownllion ${today}\n${total} pts · ${total*10} m\n`+results.map(r=>r.pts>=100?"🟨":r.pts>=60?"🟧":r.pts>0?"🟦":"⬛").join(""));share.textContent="Copied";};
@@ -276,11 +310,14 @@ async function begin(u){
     if(snap.exists()){const d=snap.data();total=d.score;results=d.results||[];played=true;$("go").innerHTML="&#9660; View today's result &#9660;";}
   }catch(e){console.warn("Couldn't check today's score:",e.code||e.message);}
 }
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+/* never wait more than 2.5s on Firestore for questions: fall back to the built-in set */
+const racePrompts=()=>Promise.race([promptsReady||loadPrompts(),sleep(2500).then(()=>PROMPTS)]);
 $("go").onclick=async()=>{
   $("auth").classList.add("hidden"); document.body.classList.add("in");
-  if(played){sink();finish(false);return;}
+  if(played){PROMPTS=await racePrompts();sink();finish(false);return;}
   $("card").innerHTML=""; $("card").append(el("p","ds","descending…")); sink();
-  const [ps]=await Promise.all([promptsReady||loadPrompts(),new Promise(r=>setTimeout(r,1900))]);
+  const [ps]=await Promise.all([racePrompts(),sleep(1200)]);
   PROMPTS=ps; showPrompt();
 };
 onAuthStateChanged(auth,u=>{
@@ -299,6 +336,17 @@ onSnapshot(query(collection(db,"scores"),where("puzzleId","==",today)),snap=>{
     lb.append(d);
   });
 },err=>{console.error(err);$("lb").textContent="Couldn't load scores ("+err.code+"). Check your Firestore rules.";});
+onSnapshot(collection(db,"scores"),snap=>{
+  const m={};
+  snap.docs.forEach(d=>{const r=d.data(),k=r.uid||r.user,e=m[k]||(m[k]={k,user:r.user,total:0,dives:0});e.total+=r.score||0;e.dives++;});
+  const rows=Object.values(m).sort((a,b)=>b.total-a.total), box=$("all"); box.innerHTML="";
+  if(!rows.length){box.append(el("p","","No dives recorded yet."));return;}
+  rows.forEach((r,k)=>{
+    const d=el("div","row"+(user&&r.k===user.uid?" me":""));
+    d.append(el("span","",k+1),el("span","",r.user),el("em","",r.dives+(r.dives===1?" dive":" dives")),el("strong","",r.total.toLocaleString()+" pts"));
+    box.append(d);
+  });
+},err=>{console.error(err);$("all").textContent="Couldn't load scores ("+err.code+").";});
 </script>
 </body>
 </html>
