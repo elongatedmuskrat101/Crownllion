@@ -3,91 +3,110 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crownllion - Team Classifieds</title>
-  <!-- Tailwind CSS CDN for instant styling -->
+  <title>Crownllion - Team Daily Challenge</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col">
 
   <!-- Navigation Bar -->
-  <nav class="bg-indigo-600 text-white shadow-md">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-      <h1 class="text-xl font-bold tracking-wide">Crownllion</h1>
-      <div id="user-section" class="flex items-center gap-3">
-        <span id="user-email" class="text-sm opacity-90">Not logged in</span>
-        <button id="auth-btn" class="bg-white text-indigo-600 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-slate-100 transition">
+  <header class="border-b border-slate-800 bg-slate-950 px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl">🦐</span>
+      <h1 class="text-xl font-bold tracking-wider text-indigo-400 uppercase">Crownllion</h1>
+    </div>
+    <div id="user-bar" class="flex items-center gap-3">
+      <!-- Dynamic User Info / Login Form -->
+    </div>
+  </header>
+
+  <!-- Login Modal / Screen (If not logged in) -->
+  <div id="login-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-2xl max-w-sm w-full space-y-4">
+      <h2 class="text-lg font-bold text-indigo-400 text-center">Team Login</h2>
+      <p class="text-xs text-slate-400 text-center">Enter your username and team password to play.</p>
+      
+      <form id="login-form" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Your Name / Username</label>
+          <input type="text" id="username-input" required placeholder="e.g. Tanner" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Team Password</label>
+          <input type="password" id="password-input" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-indigo-500">
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg text-sm transition">
           Log In
         </button>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Main Container -->
-  <main class="max-w-5xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-    
-    <!-- Left Column: Create Listing Form -->
-    <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-fit">
-      <h2 class="text-lg font-bold mb-4 text-slate-900">Post an Item</h2>
-      <form id="post-form" class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Title</label>
-          <input type="text" id="post-title" required placeholder="e.g. Standing Desk Dual Monitor Arm" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Category</label>
-          <select id="post-category" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
-            <option value="Electronics">Electronics</option>
-            <option value="Furniture">Furniture</option>
-            <option value="Office Supplies">Office Supplies</option>
-            <option value="Free / Giveaway">Free / Giveaway</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Price / Details</label>
-          <input type="text" id="post-price" required placeholder="e.g. $50 or Free" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Description</label>
-          <textarea id="post-desc" rows="3" required placeholder="Brief description of the item..." class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"></textarea>
-        </div>
-        <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition text-sm">
-          Publish Listing
-        </button>
+        <p id="login-error" class="text-xs text-rose-400 text-center hidden">Invalid team password!</p>
       </form>
+    </div>
+  </div>
+
+  <!-- Main Game Dashboard -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    <!-- Puzzle Workspace -->
+    <section class="md:col-span-2 space-y-6">
+      <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
+        
+        <div class="flex justify-between items-center border-b border-slate-700 pb-4">
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-widest text-indigo-400">Daily Challenge #01</h2>
+            <p class="text-slate-400 text-xs">Find the word that connects all three clues!</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-slate-400 block">Potential Score</span>
+            <span id="current-score-display" class="text-lg font-mono font-bold text-emerald-400">100 Pts</span>
+          </div>
+        </div>
+
+        <!-- Clue Cards -->
+        <div class="grid grid-cols-3 gap-3 text-center">
+          <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+            <span class="text-xs text-slate-500 block mb-1">CLUE 1</span>
+            <span class="font-bold text-slate-200">JELLY</span>
+          </div>
+          <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+            <span class="text-xs text-slate-500 block mb-1">CLUE 2</span>
+            <span class="font-bold text-slate-200">CAKE</span>
+          </div>
+          <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+            <span class="text-xs text-slate-500 block mb-1">CLUE 3</span>
+            <span class="font-bold text-slate-200">STAR</span>
+          </div>
+        </div>
+
+        <!-- Guess Form -->
+        <form id="guess-form" class="flex gap-2">
+          <input type="text" id="guess-input" autocomplete="off" placeholder="Type your answer..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm">
+          <button type="submit" id="submit-guess-btn" class="bg-indigo-600 hover:bg-indigo-500 font-bold px-6 py-3 rounded-xl transition text-sm">
+            Submit Guess
+          </button>
+        </form>
+
+        <div id="game-status" class="text-sm text-center font-semibold min-h-[20px]"></div>
+      </div>
     </section>
 
-    <!-- Right Column: Listings Feed -->
-    <section class="md:col-span-2 space-y-4">
-      <h2 class="text-lg font-bold text-slate-900">Recent Postings</h2>
-      <div id="posts-feed" class="space-y-4">
-        <p class="text-slate-500 text-sm">Loading postings...</p>
+    <!-- Leaderboard -->
+    <section class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl flex flex-col">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center justify-between">
+        <span>Team Leaderboard</span>
+        <span>🏆</span>
+      </h3>
+      <div id="leaderboard" class="space-y-3 flex-1 overflow-y-auto">
+        <p class="text-xs text-slate-500">Loading scores...</p>
       </div>
     </section>
 
   </main>
 
-  <!-- Firebase Scripts (Modular API) -->
+  <!-- Firebase Integration Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { 
-      getAuth, 
-      signInWithPopup, 
-      GoogleAuthProvider, 
-      signOut, 
-      onAuthStateChanged 
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { 
-      getFirestore, 
-      collection, 
-      addDoc, 
-      onSnapshot, 
-      query, 
-      orderBy, 
-      serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // Firebase Config Keys
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDtvXvvKSDW4w781kYm2e4lg47cC7Lx6NY",
       authDomain: "crownllion.firebaseapp.com",
@@ -98,100 +117,130 @@
       measurementId: "G-DT95Z9LZ22"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
+
+    // Configurable Team Password & Target Answer
+    const TEAM_PASSWORD = "team123"; // Change this to whatever password you want to give colleagues
+    const TARGET_ANSWER = "FISH";
+    const PUZZLE_ID = "Dive_01";
+
+    // Game State Variables
+    let currentUser = localStorage.getItem('krillion_user') || null;
+    let attempts = 0;
+    let potentialScore = 100;
+    let isCompleted = false;
 
     // DOM Elements
-    const authBtn = document.getElementById('auth-btn');
-    const userEmailSpan = document.getElementById('user-email');
-    const postForm = document.getElementById('post-form');
-    const postsFeed = document.getElementById('posts-feed');
+    const loginModal = document.getElementById('login-modal');
+    const loginForm = document.getElementById('login-form');
+    const usernameInput = document.getElementById('username-input');
+    const passwordInput = document.getElementById('password-input');
+    const loginError = document.getElementById('login-error');
+    const userBar = document.getElementById('user-bar');
+    
+    const guessForm = document.getElementById('guess-form');
+    const guessInput = document.getElementById('guess-input');
+    const submitBtn = document.getElementById('submit-guess-btn');
+    const gameStatus = document.getElementById('game-status');
+    const scoreDisplay = document.getElementById('current-score-display');
+    const leaderboard = document.getElementById('leaderboard');
 
-    let currentUser = null;
-
-    // Authentication Listener
-    onAuthStateChanged(auth, (user) => {
-      currentUser = user;
-      if (user) {
-        userEmailSpan.textContent = user.email;
-        authBtn.textContent = 'Log Out';
-      } else {
-        userEmailSpan.textContent = 'Not logged in';
-        authBtn.textContent = 'Log In with Google';
-      }
-    });
-
-    // Handle Login/Logout
-    authBtn.addEventListener('click', async () => {
+    // Handle Login
+    function updateAuthUI() {
       if (currentUser) {
-        await signOut(auth);
-      } else {
-        try {
-          await signInWithPopup(auth, provider);
-        } catch (err) {
-          alert("Login failed: " + err.message);
-        }
-      }
-    });
-
-    // Handle Posting Items
-    postForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentUser) {
-        alert("Please log in first to publish a post.");
-        return;
-      }
-
-      const title = document.getElementById('post-title').value;
-      const category = document.getElementById('post-category').value;
-      const price = document.getElementById('post-price').value;
-      const desc = document.getElementById('post-desc').value;
-
-      try {
-        await addDoc(collection(db, "posts"), {
-          title,
-          category,
-          price,
-          description: desc,
-          author: currentUser.email,
-          createdAt: serverTimestamp()
+        loginModal.classList.add('hidden');
+        userBar.innerHTML = `
+          <span class="text-xs text-slate-300 font-semibold">User: <span class="text-indigo-400">${currentUser}</span></span>
+          <button id="logout-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs px-2.5 py-1 rounded-md text-slate-300">Log Out</button>
+        `;
+        document.getElementById('logout-btn').addEventListener('click', () => {
+          localStorage.removeItem('krillion_user');
+          currentUser = null;
+          location.reload();
         });
-        postForm.reset();
-      } catch (err) {
-        alert("Error creating post: " + err.message);
+      } else {
+        loginModal.classList.remove('hidden');
+      }
+    }
+
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (passwordInput.value === TEAM_PASSWORD) {
+        currentUser = usernameInput.value.trim();
+        localStorage.setItem('krillion_user', currentUser);
+        updateAuthUI();
+      } else {
+        loginError.classList.remove('hidden');
       }
     });
 
-    // Realtime Listeners for Listings
-    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+    updateAuthUI();
+
+    // Handle Game Guesses & Automatic Score Tracking
+    guessForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (isCompleted) return;
+
+      const userGuess = guessInput.value.trim().toUpperCase();
+      if (!userGuess) return;
+
+      if (userGuess === TARGET_ANSWER) {
+        // Correct Answer!
+        isCompleted = true;
+        guessInput.disabled = true;
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+        gameStatus.className = "text-emerald-400 text-sm text-center font-semibold";
+        gameStatus.textContent = `🎉 Correct! You scored ${potentialScore} points. Score saved to leaderboard!`;
+
+        // Automatically write score to Firestore
+        try {
+          await addDoc(collection(db, "scores"), {
+            user: currentUser,
+            score: potentialScore,
+            attempts: attempts + 1,
+            puzzleId: PUZZLE_ID,
+            createdAt: serverTimestamp()
+          });
+        } catch (err) {
+          console.error("Error saving score:", err);
+        }
+
+      } else {
+        // Wrong Answer: Deduct 15 points per wrong guess down to 10 minimum
+        attempts++;
+        potentialScore = Math.max(10, 100 - (attempts * 15));
+        scoreDisplay.textContent = `${potentialScore} Pts`;
+
+        gameStatus.className = "text-rose-400 text-sm text-center font-semibold";
+        gameStatus.textContent = `❌ Incorrect! (${attempts} wrong guess${attempts > 1 ? 'es' : ''})`;
+        guessInput.value = "";
+      }
+    });
+
+    // Realtime Leaderboard Listener
+    const q = query(collection(db, "scores"), orderBy("score", "desc"));
     onSnapshot(q, (snapshot) => {
-      postsFeed.innerHTML = "";
+      leaderboard.innerHTML = "";
       if (snapshot.empty) {
-        postsFeed.innerHTML = `<p class="text-slate-500 text-sm">No postings yet. Be the first to publish one!</p>`;
+        leaderboard.innerHTML = `<p class="text-xs text-slate-500">No score records submitted yet.</p>`;
         return;
       }
 
       snapshot.forEach((doc) => {
         const item = doc.data();
-        const postCard = document.createElement('div');
-        postCard.className = "bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-2";
-        postCard.innerHTML = `
-          <div class="flex justify-between items-start">
-            <div>
-              <span class="text-xs font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${item.category || 'General'}</span>
-              <h3 class="font-bold text-slate-900 text-lg mt-1">${item.title}</h3>
-            </div>
-            <span class="font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg text-sm">${item.price}</span>
+        const row = document.createElement('div');
+        row.className = "flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-700/60 text-xs";
+        row.innerHTML = `
+          <div>
+            <span class="font-bold text-slate-200 block">${item.user}</span>
+            <span class="text-[10px] text-slate-500">${item.attempts || 1} attempt(s)</span>
           </div>
-          <p class="text-slate-600 text-sm">${item.description}</p>
-          <div class="pt-2 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400">
-            <span>Posted by: <strong class="text-slate-600">${item.author || 'Anonymous'}</strong></span>
-          </div>
+          <span class="text-indigo-400 font-mono font-bold text-sm">${item.score} pts</span>
         `;
-        postsFeed.appendChild(postCard);
+        leaderboard.appendChild(row);
       });
     });
   </script>
