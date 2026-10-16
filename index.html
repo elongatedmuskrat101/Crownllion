@@ -43,11 +43,19 @@ button,input{font:inherit;color:inherit}
 .box input:focus{border-color:var(--cy);outline:none}
 .box .px{width:100%;margin-top:20px}
 #err{color:var(--pk);min-height:1.2em;margin-top:10px}
+.hidden{display:none!important}
+#home{margin-top:clamp(70px,22vh,200px);width:min(600px,100%);text-align:center}
+.begin{width:100%;font-size:2.2rem;letter-spacing:.4em;padding:20px 12px;border-width:4px}
+.dive-no{margin-top:14px;color:var(--cy);letter-spacing:.2em;font-size:1.15rem;text-shadow:2px 2px 0 #02050a}
 .sw{background:none;border:0;color:var(--cy);margin-top:12px;text-decoration:underline;cursor:pointer;letter-spacing:.08em}
 /* game */
 main{position:relative;z-index:5;max-width:680px;margin:0 auto;padding:22vh 18px 60px;width:100%}
 body:not(.in) main,body:not(.in) #ruler{display:none}
 .top{display:flex;justify-content:space-between;color:var(--cy);letter-spacing:.15em;text-transform:uppercase;font-size:1.2rem}
+.clock{display:flex;align-items:center;gap:14px;margin:10px 0 26px}
+.secs{font-size:3.4rem;line-height:1;min-width:2ch;text-align:right;color:#fff;text-shadow:3px 3px 0 #02050a}
+.secs.low{color:var(--pk)}
+.clock .air{flex:1;margin:0}
 .air{height:14px;margin:12px 0 30px;border:2px solid #25507a;padding:2px}
 .air div{height:100%;width:100%;background:repeating-linear-gradient(90deg,var(--cy) 0 10px,transparent 10px 13px);transition:width 1s linear}
 .air.low div{background:repeating-linear-gradient(90deg,var(--pk) 0 10px,transparent 10px 13px)}
@@ -67,6 +75,7 @@ form.g{display:flex;gap:12px}
 .rows{margin:16px 0}
 .rows div{display:flex;justify-content:space-between;gap:12px;border-bottom:2px dashed #25507a;padding:5px 0}
 .rows span:first-child{color:var(--cy)}
+body:not(.res) .panel{display:none}
 .panel{margin-top:40px;background:rgba(15,27,51,.88);border:3px solid var(--cy);box-shadow:6px 6px 0 #02050a;padding:18px}
 .panel h2{font-weight:400;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px}
 .row{display:grid;grid-template-columns:34px 1fr auto auto;gap:12px;padding:4px 0;border-bottom:2px dashed #25507a}
@@ -103,7 +112,7 @@ form.g{display:flex;gap:12px}
   <h1 class="title" data-t="CROWNLLION">CROWNLLION</h1>
   <p class="sub">the daily dive</p>
   <p class="rules">7 prompts · 25 seconds each · rarer answers sink deeper</p>
-  <div class="box">
+  <div class="box" id="box">
     <h2 id="a-title">Log in</h2>
     <form id="a-form">
       <label for="u">Username</label><input id="u" required autocomplete="username">
@@ -112,6 +121,10 @@ form.g{display:flex;gap:12px}
       <div id="err" role="alert"></div>
     </form>
     <button class="sw" id="a-sw" type="button">New here? Create an account</button>
+  </div>
+  <div id="home" class="hidden">
+    <button class="px begin" id="go">&#9660; Begin descent &#9660;</button>
+    <p class="dive-no" id="dive-no"></p>
   </div>
 </div>
 
@@ -146,7 +159,7 @@ const TIME=25, MAXDEPTH=7000;
 const today = new Date().toISOString().slice(0,10);
 const $=id=>document.getElementById(id);
 const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;};
-let user=null, i=0, total=0, results=[], timer=null, left=TIME, locked=false;
+let tries=[], user=null, i=0, total=0, results=[], timer=null, left=TIME, locked=false;
 
 /* ---------- Scene: sky lifts away and the sea darkens as you sink ---------- */
 for(let m=0;m<=MAXDEPTH;m+=1000){const t=el("div","tk",m+"m");t.style.top=(m/MAXDEPTH*100)+"%";$("ruler").append(t);}
@@ -161,14 +174,14 @@ scene(0,0);
 
 /* ---------- Game flow ---------- */
 function showPrompt(){
-  const p=PROMPTS[i]; left=TIME; locked=false;
+  const p=PROMPTS[i]; left=TIME; locked=false; tries=[]; document.body.classList.remove("res");
   const card=$("card"); card.innerHTML="";
   const top=el("div","top"); top.append(el("span","",`Prompt ${i+1}/${PROMPTS.length}`)); const dp=el("span"); dp.id="dp"; top.append(dp); card.append(top);
-  const air=el("div","air"); air.id="air"; air.append(el("div")); card.append(air);
+  const clock=el("div","clock"); const secs=el("span","secs",String(TIME)); secs.id="secs"; const air=el("div","air"); air.id="air"; air.append(el("div")); clock.append(secs,air); card.append(clock);
   const q=el("h1","q"); q.append(el("small","","rarest valid answer wins")); q.append(p.q); card.append(q);
   const f=el("form","g"); f.innerHTML=`<input id="gi" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="type your answer"><button class="px" id="gb">Dive</button>`;
   card.append(f); const rv=el("div","reveal"); rv.id="rv"; rv.setAttribute("aria-live","polite"); card.append(rv);
-  f.addEventListener("submit",e=>{e.preventDefault();answer($("gi").value);});
+  f.addEventListener("submit",e=>{e.preventDefault();guess($("gi").value);});
   sink(); $("gi").focus(); tick(true);
   clearInterval(timer); timer=setInterval(tick,1000);
 }
@@ -177,12 +190,23 @@ function tick(init){
   const a=$("air"); if(!a)return;
   a.firstChild.style.width=Math.max(left,0)/TIME*100+"%";
   a.classList.toggle("low",left<=8);
-  if(left<=0)answer("");
+  const sc=$("secs"); sc.textContent=Math.max(left,0); sc.classList.toggle("low",left<=8);
+  if(left<=0)settle("");
 }
-function answer(g){
+/* A guess that isn't on the answer sheet doesn't end the prompt: keep trying until the clock runs out */
+function guess(g){
+  if(locked)return; g=g.trim(); if(!g)return;
+  if(lookup(PROMPTS[i],g))return settle(g);
+  const dupe=tries.includes(norm(g)); if(!dupe)tries.push(norm(g));
+  const rv=$("rv"); rv.className="reveal t0"; rv.innerHTML="";
+  rv.append(el("div","t",dupe?"already tried":"not on the sheet"));
+  rv.append(el("div","","try another answer. the clock is still running."));
+  const gi=$("gi"); gi.value=""; gi.focus();
+}
+function settle(g){
   if(locked)return; locked=true; clearInterval(timer);
   const p=PROMPTS[i], pts=g.trim()?lookup(p,g):0;
-  total+=pts; results.push({q:p.q,guess:g.trim()||"(no answer)",pts});
+  total+=pts; results.push({q:p.q,guess:g.trim()||"(no answer)",pts,tries:tries.length});
   $("gi").disabled=true; $("gb").disabled=true;
   const rv=$("rv"); rv.className="reveal t"+pts; rv.innerHTML="";
   rv.append(el("div","t",TIERS[pts][0]));
@@ -192,7 +216,7 @@ function answer(g){
   setTimeout(()=>{$("card").classList.remove("flash");i++;i<PROMPTS.length?showPrompt():finish(true);},1900);
 }
 async function finish(save){
-  clearInterval(timer);
+  clearInterval(timer); document.body.classList.add("res");
   const card=$("card"); card.innerHTML="";
   card.append(el("div","top",`Dive complete · ${today}`));
   card.append(el("div","big",total.toLocaleString()+" pts"));
@@ -237,24 +261,31 @@ async function loadPrompts(){
   console.log("Using built-in prompts");
   return PROMPTS;
 }
+let played=false, promptsReady=null;
 async function begin(u){
   if(begun===u.uid)return; begun=u.uid; user=u;
-  $("auth").classList.add("hidden"); document.body.classList.add("in");
   const w=$("who"); w.innerHTML=""; w.append(el("span","",u.displayName||u.email.split("@")[0]));
   const out=el("button","px sm","Log out"); out.onclick=()=>signOut(auth); w.append(out);
-  total=0;i=0;results=[];
-  $("card").innerHTML=""; $("card").append(el("p","ds","descending…")); sink();
-  const wait=new Promise(r=>setTimeout(r,1900));
+  total=0;i=0;results=[];played=false;
+  /* home screen: same scene, "Begin descent" instead of the login box */
+  $("box").classList.add("hidden"); $("home").classList.remove("hidden"); $("auth").classList.remove("hidden");
+  $("dive-no").textContent="Dive of "+today;
+  promptsReady=loadPrompts();
   try{
     const snap=await getDoc(doc(db,"scores",`${today}_${u.uid}`));
-    if(snap.exists()){const d=snap.data();total=d.score;results=d.results||[];await wait;sink();finish(false);return;}
+    if(snap.exists()){const d=snap.data();total=d.score;results=d.results||[];played=true;$("go").innerHTML="&#9660; View today's result &#9660;";}
   }catch(e){console.warn("Couldn't check today's score:",e.code||e.message);}
-  const [ps]=await Promise.all([loadPrompts(),wait]);
-  PROMPTS=ps; showPrompt();
 }
+$("go").onclick=async()=>{
+  $("auth").classList.add("hidden"); document.body.classList.add("in");
+  if(played){sink();finish(false);return;}
+  $("card").innerHTML=""; $("card").append(el("p","ds","descending…")); sink();
+  const [ps]=await Promise.all([promptsReady||loadPrompts(),new Promise(r=>setTimeout(r,1900))]);
+  PROMPTS=ps; showPrompt();
+};
 onAuthStateChanged(auth,u=>{
   if(u)begin(u);
-  else{begun=null;user=null;clearInterval(timer);$("who").innerHTML="";$("card").innerHTML="";document.body.classList.remove("in");scene(0,0);$("auth").classList.remove("hidden");}
+  else{begun=null;user=null;played=false;clearInterval(timer);$("who").innerHTML="";$("card").innerHTML="";document.body.classList.remove("in","res");scene(0,0);$("home").classList.add("hidden");$("box").classList.remove("hidden");$("auth").classList.remove("hidden");}
 });
 
 /* ---------- Leaderboard ---------- */
