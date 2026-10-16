@@ -121,7 +121,7 @@ body:not(.res) .panel{display:none}
 .miss{color:var(--pk);min-height:1.3em;margin-top:6px}
 .rcard{text-align:center;padding-top:4vh}
 .rt{font-weight:400;font-size:clamp(3rem,9vw,5.5rem);line-height:1;letter-spacing:.08em;text-transform:uppercase;text-shadow:4px 4px 0 #02050a;color:#a9bccb}
-.ra{font-size:2rem;margin-top:14px}.rp{font-size:2.4rem;color:var(--pk);margin-top:6px;text-transform:uppercase}.rf{color:#7fb7d4;letter-spacing:.12em;margin-top:8px}
+.ra{font-size:2rem;margin-top:14px}.rp{font-size:2.4rem;color:var(--ink);margin-top:6px;text-transform:uppercase}.rf{color:#7fb7d4;letter-spacing:.12em;margin-top:8px}
 #bar{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:34px 16px 22px;display:flex;justify-content:center;background:linear-gradient(180deg,transparent,rgba(3,8,16,.96) 45%)}
 #bar.hidden{display:none}
 #gf{display:flex;gap:14px;align-items:flex-start;width:min(760px,100%)}
@@ -137,7 +137,16 @@ body:not(.res) .panel{display:none}
 #fish{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden}
 .fish{position:absolute;left:0;animation:swim linear infinite}
 @keyframes swim{from{transform:translateX(-60px)}to{transform:translateX(calc(100vw + 60px))}}
-#pc{position:fixed;left:24px;top:72vh;z-index:6;width:46px;filter:drop-shadow(0 0 12px rgba(255,210,63,.7));animation:bob 3s steps(4) infinite}
+#pc{position:fixed;left:24px;top:72vh;z-index:6;width:46px;background:none;border:0;padding:0;cursor:pointer;filter:drop-shadow(0 0 12px rgba(255,210,63,.7));animation:bob 3s steps(4) infinite}
+#pc svg{display:block;width:100%;height:auto;transform-origin:50% 60%}
+#pc svg.spin{animation:spin .85s ease-out}
+#pc svg.dive{animation:dive 1.8s ease-in-out}
+@keyframes spin{0%{transform:translateY(0) rotate(0)}30%{transform:translateY(-26px) rotate(240deg) scale(1.2)}65%{transform:translateY(-8px) rotate(520deg) scale(1.1)}100%{transform:translateY(0) rotate(720deg) scale(1)}}
+@keyframes dive{0%{transform:translateY(0) rotate(0)}45%{transform:translateY(var(--dd,12vh)) rotate(-14deg)}100%{transform:translateY(0) rotate(0)}}
+#sug{position:absolute;left:50%;bottom:104px;transform:translateX(-50%);z-index:2;background:rgba(5,10,20,.95);clip-path:var(--n);padding:10px 26px;text-align:center;white-space:nowrap;font-size:1.4rem}
+#sug i{font-style:normal;color:#9db6c6}#sug b{font-weight:400;color:var(--cy)}
+#sug small{display:block;margin-top:4px;color:#7fb7d4;letter-spacing:.12em;font-size:1rem}
+.rf2{margin-top:6px;color:#4f7a94;letter-spacing:.15em;font-size:1.1rem}
 </style>
 </head>
 <body>
@@ -153,9 +162,8 @@ body:not(.res) .panel{display:none}
 <div id="fish" aria-hidden="true"></div>
 <div class="scan"></div>
 <div id="hud"><div class="hp"><small>Depth</small><b id="hd">0m</b></div><div class="pg"><div id="seg"></div><small id="pl">Prompt 1 of 7</small></div><div class="hp r"><small>Score</small><b id="hs">0</b></div></div>
-<div id="pc" aria-hidden="true"><svg viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="#ffd23f" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg></div>
+<button id="pc" type="button" aria-label="Spin the crown"><svg viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="#ffd23f" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg></button>
 <div id="bar" class="hidden"></div>
-<div id="crown" class="hidden" aria-live="polite"></div>
 <div id="who"></div>
 <div id="ruler" aria-hidden="true"><svg id="mk" width="32" height="22" viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="#ffd23f" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg></div>
 
@@ -212,12 +220,8 @@ const prep=ps=>{ps.forEach(p=>{p.map={};for(const [pts,l] of Object.entries(p.a)
 const lookup=(p,g)=>{const n=norm(g);return p.map[n]??p.map[n.replace(/s$/,"")]??0;};
 const bearing = t => t>=450?"One in a Krillion":t>=351?"Deep Cut":t>=251?"Rare":t>=151?"Schooler":"Plankton";
 
-const CC={10:"#9aa7b4",15:"#5fd38d",30:"#4aa8ff",60:"#b46bff",85:"#ff4f8b",100:"#ffd23f"};
+const CC={10:"#9aa7b4",15:"#5fd38d",30:"#4aa8ff",60:"#ff9f43",85:"#9b7bff",100:"#ffd23f"};
 const CROWN=c=>`<svg viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="${c}" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg>`;
-function showCrown(pts){
-  const c=$("crown"); c.innerHTML=CROWN(CC[pts])+`<p style="color:${CC[pts]}">${TIERS[pts][0]}</p><p style="font-size:1.8rem">+${pts} pts</p>`;
-  c.className=pts===100?"gold":""; setTimeout(()=>c.classList.add("hidden"),1700);
-}
 const TIME=25, MAXDEPTH=7000;
 const today = new Date().toISOString().slice(0,10);
 const $=id=>document.getElementById(id);
@@ -227,8 +231,9 @@ let tries=[], user=null, i=0, total=0, results=[], timer=null, left=TIME, locked
 /* ---------- Scene: sky lifts away and the sea darkens as you sink ---------- */
 for(let m=0;m<=MAXDEPTH;m+=1000){const t=el("div","tk",m+"m");t.style.top=(m/MAXDEPTH*100)+"%";$("ruler").append(t);}
 function scene(p,off=0){const y=-p*4*innerHeight;$("world").style.backgroundPosition=`0 ${y+off}px`;$("sky").style.transform=`translateY(${y}px)`;$("bw").style.transform=`translateY(${y+off}px)`;}
+$("pc").onclick=()=>{const v=$("pc").firstElementChild;v.classList.remove("spin","dive");void v.getBoundingClientRect();v.classList.add("spin");};
 const home=()=>scene(0,innerHeight*.34);
-const FLAVOR={10:"the answer everyone blurts out.",15:"too clever. everyone reaches for it.",30:"swimming with the school.",60:"a rare find.",85:"a deep cut.",100:"one in a krillion."};
+const FLAVOR={10:"the answer everyone blurts out.",15:"too clever. everyone reaches for it.",30:"solid. swimming with the school.",60:"genuinely uncommon. nice pull.",85:"real obscurity. not many get this deep.",100:"one in a krillion. trench floor."};
 function hud(){
   const sg=$("seg"); sg.innerHTML="";
   PROMPTS.forEach((_,k)=>{const b=document.createElement("i");
@@ -253,8 +258,9 @@ function showPrompt(){
   card.append(el("small","pl",`Prompt ${i+1} of ${PROMPTS.length}`),el("h1","q",p.q),el("p","hint","\u25BC rarer answers sink deeper \u25BC"));
   const rv=el("p","miss"); rv.id="rv"; rv.setAttribute("aria-live","polite"); card.append(rv);
   const bar=$("bar"); bar.className="";
-  bar.innerHTML=`<form id="gf"><div class="dial" id="dial"><span id="secs">${TIME}</span></div><div class="mid"><input id="gi" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="type your answer"><div class="air" id="air"><div></div></div></div><button class="px pink" id="gb">Dive</button></form>`;
+  bar.innerHTML=`<div id="sug" class="hidden"></div><form id="gf"><div class="dial" id="dial"><span id="secs">${TIME}</span></div><div class="mid"><input id="gi" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="type your answer"><div class="air" id="air"><div></div></div></div><button class="px pink" id="gb">Dive</button></form>`;
   $("gf").addEventListener("submit",e=>{e.preventDefault();guess($("gi").value);});
+  $("gi").addEventListener("input",()=>$("sug").classList.add("hidden"));
   sink(); $("gi").focus(); tick(true);
   clearInterval(timer); timer=setInterval(tick,1000);
 }
@@ -266,10 +272,25 @@ function tick(init){
   dl.style.setProperty("--p",l/TIME*100+"%"); dl.classList.toggle("low",low); $("secs").textContent=l;
   if(left<=0)settle("",true);
 }
+function lev(a,b){const m=a.length,n=b.length,d=Array.from({length:m+1},(_,r)=>[r,...Array(n).fill(0)]);for(let j=1;j<=n;j++)d[0][j]=j;for(let r=1;r<=m;r++)for(let j=1;j<=n;j++)d[r][j]=Math.min(d[r-1][j]+1,d[r][j-1]+1,d[r-1][j-1]+(a[r-1]===b[j-1]?0:1));return d[m][n];}
+const titleCase=w=>w.replace(/(^|[\s-])([a-z])/g,(m,x,c)=>x+c.toUpperCase());
+function suggest(p,g){
+  const n=norm(g); if(n.length<4)return null;
+  const max=n.length>=8?2:1; let best=null,bd=99;
+  for(const [pts,list] of Object.entries(p.a))for(const w of list){const d=lev(n,norm(w));if(d>0&&(d<bd||(d===bd&&+pts>best.pts))){bd=d;best={w,pts:+pts};}}
+  return bd<=max?best.w:null;
+}
+function showSug(from,to){
+  const s=$("sug"); s.innerHTML=""; const l=el("div");
+  l.append(el("i","",`\u201C${from}\u201D`)," \u2192 ",el("b","",`\u201C${to}\u201D`));
+  s.append(l,el("small","","submit again to confirm \u00B7 or edit")); s.classList.remove("hidden");
+}
 /* a guess that isn't on the answer sheet doesn't end the prompt */
 function guess(g){
   if(locked)return; g=g.trim(); if(!g)return;
   if(lookup(PROMPTS[i],g))return settle(g);
+  const near=suggest(PROMPTS[i],g);
+  if(near){const t=titleCase(near);$("gi").value=t;$("gi").focus();showSug(g,t);return;}
   const dupe=tries.includes(norm(g)); if(!dupe)tries.push(norm(g));
   $("rv").textContent=dupe?"already tried. think rarer.":"not on the sheet. try another.";
   const gi=$("gi"); gi.value=""; gi.focus();
@@ -279,13 +300,21 @@ function settle(g,timedout){
   const p=PROMPTS[i], pts=g.trim()?lookup(p,g):0;
   total+=pts; results.push({q:p.q,guess:g.trim()||"(no answer)",pts,tries:tries.length});
   const card=$("card"); card.className="rcard"; card.innerHTML="";
-  const h=el("h1","rt",pts?TIERS[pts][0]:"Nothing landed"); h.style.color=CC[pts]||"#a9bccb";
-  card.append(h,el("p","ra",g.trim()||"\u2014"),el("p","rp",`+${pts} pts`),el("p","rf",pts?FLAVOR[pts]:(timedout?"the clock beat you to it.":"that answer didn't fit.")));
+  const col=CC[pts]||"#a9bccb", h=el("h1","rt",pts?TIERS[pts][0]:"Nothing landed"); h.style.color=col;
+  const rp=el("p","rp"), pp=el("span","",`+${pts} pts`); pp.style.color=col; rp.append(pp,pts?` \u00B7 sink ${pts*10}m`:"");
+  card.append(h,el("p","ra",g.trim()?`\u201C${g.trim()}\u201D`:"\u2014"),rp,
+    el("p","rf",pts?FLAVOR[pts]:(timedout?"the clock beat you to it.":"that answer didn't fit.")),
+    el("p","rf2",`total depth ${(total*10).toLocaleString()}m`));
+  $("sug")&&$("sug").classList.add("hidden");
   const bar=$("bar"); bar.innerHTML="";
   const nb=el("button","px dsc",i+1<PROMPTS.length?"Descend \u25BC":"Results \u25BC");
   nb.onclick=()=>{i++;i<PROMPTS.length?showPrompt():finish(true);};
   bar.append(nb); nb.focus();
-  if(pts)showCrown(pts); sink();
+  if(pts){ /* the crown dives further the more points you scored */
+    const v=$("pc").firstElementChild; v.style.setProperty("--dd",`${4+pts*.18}vh`);
+    v.classList.remove("dive","spin"); void v.getBoundingClientRect(); v.classList.add("dive");
+  }
+  sink();
 }
 async function finish(save){
   clearInterval(timer); document.body.classList.add("res"); $("bar").className="hidden"; $("card").className="";
