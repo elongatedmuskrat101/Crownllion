@@ -153,7 +153,9 @@ body:not(.res) .panel{display:none}
 /* summary page */
 body.res main{max-width:560px;padding:26px 18px 90px}
 body.res #hud,body.res #ruler,body.res #pc,body.res #fish{display:none}
-body.res #world{filter:brightness(.42) saturate(.75)}
+body.res #world{filter:brightness(.4) saturate(.7)}
+body.res #sky{opacity:.16;filter:brightness(.4)}
+body.res #bw{filter:brightness(.55)}
 body.res #who{top:12px}
 .sh{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .slogo{font-size:2rem;letter-spacing:.1em;color:#fff;text-shadow:-2px 0 var(--pk),2px 0 var(--cy)}
@@ -167,6 +169,7 @@ body.res #who{top:12px}
 .bear{display:grid;grid-template-columns:24px 76px 1fr;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #1d3550;color:#8aa3b3}
 .bear.on{color:#fff}.bear b{font-weight:400}
 .bear svg{width:20px!important}
+.say{position:absolute;left:58px;top:-6px;background:var(--navy);border:3px solid var(--cy);padding:0 10px;white-space:nowrap;color:#fff;font-size:1.4rem;letter-spacing:.1em;pointer-events:none}
 </style>
 </head>
 <body>
@@ -182,7 +185,7 @@ body.res #who{top:12px}
 <div id="fish" aria-hidden="true"></div>
 <div class="scan"></div>
 <div id="hud"><div class="hp"><small>Depth</small><b id="hd">0m</b></div><div class="pg"><div id="seg"></div><small id="pl">Prompt 1 of 7</small></div><div class="hp r"><small>Score</small><b id="hs">0</b></div></div>
-<button id="pc" type="button" aria-label="Spin the crown"><svg viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="#ffd23f" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg></button>
+<button id="pc" type="button" aria-label="Spin the crown"><svg viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="#ffd23f" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg><span class="say hidden" id="say"></span></button>
 <div id="bar" class="hidden"></div>
 <div id="who"></div>
 <div id="ruler" aria-hidden="true"><svg id="mk" width="32" height="22" viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="#ffd23f" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg></div>
@@ -190,7 +193,7 @@ body.res #who{top:12px}
 <main>
   <div id="card"></div>
   <section class="panel"><h2>Today's team dive</h2><div id="lb"><p>Loading scores…</p></div></section>
-  <section class="panel"><h2>All-time scoreboard</h2><div id="all"><p>Loading scores…</p></div></section>
+  <section class="panel"><h2>All time scoreboard</h2><div id="all"><p>Loading scores…</p></div></section>
 </main>
 
 <div id="auth">
@@ -225,7 +228,7 @@ const app = initializeApp({
 const auth = getAuth(app), db = initializeFirestore(app,{experimentalAutoDetectLongPolling:true});
 
 /* ---------- Game data: tier points -> accepted answers ---------- */
-const TIERS = {0:["Not on the sheet"],10:["Plankton"],15:["Too Clever"],30:["Schooler"],60:["Rare"],85:["Deep Cut"],100:["One in a Krillion"]};
+const TIERS = {0:["Not on the sheet"],10:["Plankton"],15:["Too Clever"],30:["Schooler"],60:["Rare"],85:["Deep Cut"],100:["One in a Crownllion"]};
 let PROMPTS = [
  {q:"Name a type of sausage", a:{10:["bratwurst","hot dog","pepperoni","chorizo","salami"],15:["liverwurst"],30:["kielbasa","andouille","mortadella","bologna","chipolata"],60:["boudin","merguez","lap cheong","cumberland","weisswurst"],85:["sobrasada","nduja","saucisson","zampone","lukanka"],100:["sujuk","blutwurst","isterband","landjager"]}},
  {q:"Name a country in Africa", a:{10:["egypt","nigeria","kenya","south africa"],15:["morocco"],30:["ghana","ethiopia","tanzania","algeria","senegal"],60:["namibia","botswana","malawi","mali","angola"],85:["eswatini","djibouti","burkina faso","lesotho","gabon"],100:["sao tome and principe","comoros","equatorial guinea","eritrea"]}},
@@ -238,12 +241,16 @@ let PROMPTS = [
 const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();
 const prep=ps=>{ps.forEach(p=>{p.map={};for(const [pts,l] of Object.entries(p.a))l.forEach(w=>p.map[norm(w)]=+pts);});return ps;}; prep(PROMPTS);
 const lookup=(p,g)=>{const n=norm(g);return p.map[n]??p.map[n.replace(/s$/,"")]??0;};
-const bearing = t => t>=450?"One in a Krillion":t>=351?"Deep Cut":t>=251?"Rare":t>=151?"Schooler":"Plankton";
+const bearing = t => t>=450?"One in a Crownllion":t>=351?"Deep Cut":t>=251?"Rare":t>=151?"Schooler":"Plankton";
 
 const CC={10:"#9aa7b4",15:"#5fd38d",30:"#4aa8ff",60:"#ff9f43",85:"#9b7bff",100:"#ffd23f"};
 const CROWN=c=>`<svg viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="${c}" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg>`;
 const TIME=25, MAXDEPTH=7000;
-const today = new Date().toISOString().slice(0,10);
+/* Day key uses the player's LOCAL date so the dive rolls over at local midnight (not UTC).
+   LAUNCH is Dive #1. Change it to the date your first dive should be. */
+const LAUNCH="2026-10-17";
+const _d=new Date(), today=`${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,"0")}-${String(_d.getDate()).padStart(2,"0")}`;
+const diveNo=Math.max(1,Math.round((Date.parse(today)-Date.parse(LAUNCH))/864e5)+1);
 const $=id=>document.getElementById(id);
 const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;};
 let todayRows=[], tries=[], user=null, i=0, total=0, results=[], timer=null, left=TIME, locked=false;
@@ -251,9 +258,32 @@ let todayRows=[], tries=[], user=null, i=0, total=0, results=[], timer=null, lef
 /* ---------- Scene: sky lifts away and the sea darkens as you sink ---------- */
 for(let m=0;m<=MAXDEPTH;m+=1000){const t=el("div","tk",m+"m");t.style.top=(m/MAXDEPTH*100)+"%";$("ruler").append(t);}
 function scene(p,off=0){const y=-p*4*innerHeight;$("world").style.backgroundPosition=`0 ${y+off}px`;$("sky").style.transform=`translateY(${y}px)`;$("bw").style.transform=`translateY(${y+off}px)`;}
-$("pc").onclick=()=>{const v=$("pc").firstElementChild;v.classList.remove("spin","dive");void v.getBoundingClientRect();v.classList.add("spin");};
+let AC=null, sayT=null;
+const SAYS=["pfft!","toot!","brrrap!","pbbbt!","thpppt!","blorp!"];
+/* synthesised squeaks and rumbles (Web Audio, no files): random pitch, wobble and length each click */
+function toot(){
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended")AC.resume();
+    const t=AC.currentTime, k=Math.floor(Math.random()*5), r=()=>.85+Math.random()*.3;
+    const dur=[.3,.65,.2,1,.45][k]*r(), f0=[120,75,230,58,150][k]*r(), end=[.5,.4,1.8,.6,.3][k];
+    const o=AC.createOscillator(); o.type=k===1?"square":"sawtooth";
+    o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f0*end,t+dur);
+    const vib=AC.createOscillator(), vg=AC.createGain(); vib.frequency.value=18+Math.random()*30; vg.gain.value=f0*(.15+Math.random()*.25); vib.connect(vg); vg.connect(o.frequency);
+    const fl=AC.createOscillator(), fg=AC.createGain(), flutter=AC.createGain(); fl.frequency.value=20+Math.random()*35; fg.gain.value=.5; flutter.gain.value=.5; fl.connect(fg); fg.connect(flutter.gain);
+    const lp=AC.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=500+Math.random()*900;
+    const env=AC.createGain(); env.gain.setValueAtTime(.0001,t); env.gain.exponentialRampToValueAtTime(.32,t+.03); env.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(lp); lp.connect(flutter); flutter.connect(env); env.connect(AC.destination);
+    [o,vib,fl].forEach(n=>{n.start(t);n.stop(t+dur+.05);});
+  }catch(e){}
+}
+$("pc").onclick=()=>{
+  const v=$("pc").firstElementChild; v.classList.remove("spin","dive"); void v.getBoundingClientRect(); v.classList.add("spin");
+  toot();
+  const sy=$("say"); sy.textContent=SAYS[Math.floor(Math.random()*SAYS.length)]; sy.classList.remove("hidden");
+  clearTimeout(sayT); sayT=setTimeout(()=>sy.classList.add("hidden"),900);
+};
 const home=()=>scene(0,innerHeight*.34);
-const FLAVOR={10:"the answer everyone blurts out.",15:"too clever. everyone reaches for it.",30:"solid. swimming with the school.",60:"genuinely uncommon. nice pull.",85:"real obscurity. not many get this deep.",100:"one in a krillion. trench floor."};
+const FLAVOR={10:"the answer everyone blurts out.",15:"too clever. everyone reaches for it.",30:"solid. swimming with the school.",60:"genuinely uncommon. nice pull.",85:"real obscurity. not many get this deep.",100:"one in a crownllion. trench floor."};
 function hud(){
   const sg=$("seg"); sg.innerHTML="";
   PROMPTS.forEach((_,k)=>{const b=document.createElement("i");
@@ -337,7 +367,7 @@ function settle(g,timedout){
   }
   sink();
 }
-const BANDS=[[0,150,10,"Plankton","drifting near the surface."],[151,250,30,"Schooler","keeping pace with the crowd."],[251,350,60,"Rare","past the thermocline. nice."],[351,449,85,"Deep Cut","properly deep."],[450,9999,100,"One in a Krillion","trench dweller."]];
+const BANDS=[[0,150,10,"Plankton","drifting near the surface."],[151,250,30,"Schooler","keeping pace with the crowd."],[251,350,60,"Rare","past the thermocline. nice."],[351,449,85,"Deep Cut","properly deep."],[450,9999,100,"One in a Crownllion","trench dweller."]];
 const crownG=(c,x,y,k)=>`<g transform="translate(${x-8*k},${y-5.5*k}) scale(${k})"><path fill="${c}" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></g>`;
 function diveLogSVG(){
   const W=520,H=250,L=46,T=16,B=36,pw=W-L-12,ph=H-T-B,X=k=>L+24+k*(pw-48)/6,Y=p=>T+p/100*ph;
@@ -356,7 +386,7 @@ function bellSVG(rows){
   const X=v=>v/700*W, Y=y=>T+(H-T-B)*(1-.92*y/max);
   const line=pts.map(([v,y])=>`${X(v).toFixed(1)},${Y(y).toFixed(1)}`).join("L");
   const tv=Math.min(total,700), yx=X(tv), yy=Y(dens(sc,h,tv));
-  let ax=""; for(let v=0;v<=700;v+=100)ax+=`<text x="${X(v)}" y="${H-6}" text-anchor="${v===0?"start":v===700?"end":"middle"}" fill="#6e8da0" font-size="14">${v}</text>`;
+  let ax=""; for(let v=0;v<=700;v+=100)if(Math.abs(X(v)-yx)>32)ax+=`<text x="${X(v)}" y="${H-6}" text-anchor="${v===0?"start":v===700?"end":"middle"}" fill="#6e8da0" font-size="14">${v}</text>`;
   return `<svg viewBox="0 0 ${W} ${H}"><path d="M${line}L${W},${H-B}L0,${H-B}Z" fill="rgba(63,216,240,.16)"/><path d="M${line}" fill="none" stroke="#3fd8f0" stroke-width="2.5"/><line x1="${yx}" x2="${yx}" y1="${yy}" y2="${H-B}" stroke="#ff4f8b" stroke-width="2.5"/><circle cx="${yx}" cy="${yy}" r="5" fill="#ff4f8b"/><text x="${yx}" y="${H-6}" text-anchor="middle" fill="#ff4f8b" font-size="15">YOU</text>${ax}</svg>`;
 }
 const openEv=new Set();
@@ -385,13 +415,11 @@ async function finish(save){
   clearInterval(timer); document.body.classList.add("res"); $("bar").className="hidden";
   scene(0,innerHeight*.56);
   const card=$("card"); card.className="sum"; card.innerHTML="";
-  const hd=el("div","sh"); hd.append(el("span","slogo","CROWNLLION"),el("span","sdate",`Dive complete \u00B7 ${today}`)); card.append(hd);
+  const hd=el("div","sh"); hd.append(el("span","slogo","CROWNLLION"),el("span","sdate",`Dive #${diveNo} complete`)); card.append(hd);
   const sc=el("div","ss"); sc.append(el("span","sbig",total.toLocaleString()),el("span","sdep",`-${(total*10).toLocaleString()}m`)); card.append(sc);
   const bl=el("div"); bl.id="bell"; card.append(bl);
   const pc=el("p","spct"); pc.id="pct"; card.append(pc);
-  const share=el("button","px sm","Copy result");
-  share.onclick=()=>{navigator.clipboard.writeText(`Crownllion ${today}\n${total} pts \u00B7 ${total*10} m\n`+results.map(r=>r.pts>=100?"\uD83D\uDFE8":r.pts>=60?"\uD83D\uDFE7":r.pts>0?"\uD83D\uDFE6":"\u2B1B").join(""));share.textContent="Copied";};
-  card.append(share);
+  
   const note=el("p","",""); note.id="pend"; note.style.cssText="margin-top:10px;color:#7fb7d4"; card.append(note);
   card.append(el("h3","sh3","Dive log")); const dl=el("div"); dl.innerHTML=diveLogSVG(); card.append(dl);
   card.append(el("h3","sh3","The bearing"));
@@ -422,7 +450,7 @@ async function finish(save){
 }
 async function saveScore(){
   const n=$("pend");
-  try{await setDoc(doc(db,"scores",`${today}_${user.uid}`),{user:user.displayName||user.email.split("@")[0],uid:user.uid,score:total,puzzleId:today,results,createdAt:serverTimestamp()});if(n)n.textContent="Score saved to the leaderboard.";}
+  try{await setDoc(doc(db,"scores",`${today}_${user.uid}`),{user:user.displayName||user.email.split("@")[0],uid:user.uid,score:total,puzzleId:today,dive:diveNo,results,createdAt:serverTimestamp()});if(n)n.textContent="Score saved to the leaderboard.";}
   catch(e){console.error(e);if(n)n.textContent="Couldn't save score ("+(e.code||e.message)+"). Check your Firestore rules.";}
 }
 
@@ -459,7 +487,7 @@ async function begin(u){
   total=0;i=0;results=[];played=false;
   /* home screen: same scene, "Begin descent" instead of the login box */
   $("box").classList.add("hidden"); $("home").classList.remove("hidden"); $("auth").classList.remove("hidden");
-  $("dive-no").textContent="Dive of "+today;
+  $("dive-no").textContent="Dive #"+diveNo;
   promptsReady=loadPrompts();
   try{
     const snap=await getDoc(doc(db,"scores",`${today}_${u.uid}`));
