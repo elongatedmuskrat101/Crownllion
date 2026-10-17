@@ -606,6 +606,7 @@ async function loadPrompts(){
 let played=false, promptsReady=null;
 async function begin(u){
   if(begun===u.uid)return; begun=u.uid; user=u;
+  startBoards();
   const w=$("who"); w.innerHTML=""; w.append(el("span","",u.displayName||u.email.split("@")[0]));
   const out=el("button","px sm","Log out"); out.onclick=()=>signOut(auth); w.append(out);
   total=0;i=0;results=[];played=false;
@@ -630,11 +631,17 @@ $("go").onclick=async()=>{
 };
 onAuthStateChanged(auth,u=>{
   if(u)begin(u);
-  else{begun=null;user=null;played=false;clearInterval(timer);$("who").innerHTML="";$("card").innerHTML="";document.body.classList.remove("in","res");home();$("home").classList.add("hidden");$("box").classList.remove("hidden");$("auth").classList.remove("hidden");}
+  else{stopBoards();begun=null;user=null;played=false;clearInterval(timer);$("who").innerHTML="";$("card").innerHTML="";document.body.classList.remove("in","res");home();$("home").classList.add("hidden");$("box").classList.remove("hidden");$("auth").classList.remove("hidden");}
 });
 
 /* ---------- Leaderboard ---------- */
-onSnapshot(query(collection(db,"scores"),where("puzzleId","==",today)),snap=>{
+/* The boards only start listening once someone is signed in (rules require a signed-in user),
+   and stop again on log out. Before this, they started at page load and died on permission-denied. */
+let stopToday=null, stopAll=null;
+function stopBoards(){ if(stopToday){stopToday();stopToday=null;} if(stopAll){stopAll();stopAll=null;} }
+function startBoards(){
+stopBoards();
+stopToday=onSnapshot(query(collection(db,"scores"),where("puzzleId","==",today)),snap=>{
   const rows=snap.docs.map(d=>d.data()).sort((a,b)=>b.score-a.score);
   todayRows=rows; if(document.body.classList.contains("res"))liveSummary();
   const lb=$("lb"); lb.innerHTML="";
@@ -645,7 +652,7 @@ onSnapshot(query(collection(db,"scores"),where("puzzleId","==",today)),snap=>{
     lb.append(d);
   });
 },err=>{console.error(err);$("lb").textContent="Couldn't load scores ("+err.code+"). Check your Firestore rules.";});
-onSnapshot(collection(db,"scores"),snap=>{
+stopAll=onSnapshot(collection(db,"scores"),snap=>{
   const m={};
   snap.docs.forEach(d=>{const r=d.data(),k=r.uid||r.user,e=m[k]||(m[k]={k,user:r.user,total:0,dives:0});e.total+=r.score||0;e.dives++;});
   const rows=Object.values(m).sort((a,b)=>b.total-a.total), box=$("all"); box.innerHTML="";
@@ -656,6 +663,7 @@ onSnapshot(collection(db,"scores"),snap=>{
     box.append(d);
   });
 },err=>{console.error(err);$("all").textContent="Couldn't load scores ("+err.code+").";});
+}
 </script>
 </body>
 </html>
