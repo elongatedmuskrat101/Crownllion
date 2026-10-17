@@ -197,6 +197,9 @@ body.boot *{transition:none!important}
 @keyframes bub{to{transform:translateY(-150px);opacity:0}}
 body.diving .nt,body.diving .rt2,body.diving #you,body.diving #world,body.diving #sky,body.diving #bw{transition:none!important}
 #snd{position:fixed;top:12px;left:8px;z-index:31}
+#fx{position:fixed;inset:0;z-index:25;pointer-events:none;overflow:hidden}
+.wb{position:absolute;border:2px solid #bfeaf5;background:rgba(159,214,224,.14);border-radius:50%;opacity:0;animation:wrise var(--d,1.4s) ease-out var(--dl,0s) forwards}
+@keyframes wrise{0%{transform:translate(0,0) scale(.5);opacity:0}15%{opacity:1}100%{transform:translate(var(--sx,0),calc(var(--rise,240px) * -1)) scale(1.1);opacity:0}}
 </style>
 </head>
 <body class="boot">
@@ -208,7 +211,7 @@ body.diving .nt,body.diving .rt2,body.diving #you,body.diving #world,body.diving
   <svg class="cloud" style="top:6vh;right:-3vw;width:330px" viewBox="0 0 96 32" shape-rendering="crispEdges"><use href="#cl"/></svg>
   
 </div>
-<div id="bw" aria-hidden="true"><svg id="wave" viewBox="0 0 1600 60" preserveAspectRatio="none"><defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a78ab"/><stop offset=".5" stop-color="#2a78ab"/><stop offset="1" stop-color="#2a78ab" stop-opacity="0"/></linearGradient></defs><rect x="0" y="8" width="100%" height="14" fill="#e3f1f7"/><path id="w1" fill="url(#wg)" d="M0,16L1600,16L1600,60L0,60Z"/><path id="w2" d="M0,16L1600,16" fill="none" stroke="#9fe6dc" stroke-opacity=".75" stroke-width="2"/></svg><svg class="boat" viewBox="0 0 56 40" shape-rendering="crispEdges"><path d="M0 24h56v4h-4v4H8v-4H0z" fill="#0d1f33"/><path d="M20 14h20v10H20z" fill="#0d1f33"/><path d="M29 0h2v14h-2z" fill="#0d1f33"/><path d="M19 2h10v6H19z" fill="#ff5c8a"/><path d="M24 17h3v5h-3zM32 17h3v5h-3z" fill="#5ee0d0"/></svg></div>
+<div id="bw" aria-hidden="true"><svg id="wave" viewBox="0 0 1600 60" preserveAspectRatio="none"><defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a78ab"/><stop offset=".5" stop-color="#2a78ab"/><stop offset="1" stop-color="#2a78ab" stop-opacity="0"/></linearGradient></defs><linearGradient id="wg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd0ea" stop-opacity=".55"/><stop offset="1" stop-color="#8fd0ea" stop-opacity="0"/></linearGradient><rect x="0" y="0" width="100%" height="30" fill="#e3f1f7"/><path id="w0" fill="url(#wg2)" d="M0,13L1600,13L1600,60L0,60Z"/><path id="w1" fill="url(#wg)" d="M0,16L1600,16L1600,60L0,60Z"/><path id="w2" d="M0,16L1600,16" fill="none" stroke="#d4f7f1" stroke-opacity=".9" stroke-width="3"/></svg><svg class="boat" viewBox="0 0 56 40" shape-rendering="crispEdges"><path d="M0 24h56v4h-4v4H8v-4H0z" fill="#0d1f33"/><path d="M20 14h20v10H20z" fill="#0d1f33"/><path d="M29 0h2v14h-2z" fill="#0d1f33"/><path d="M19 2h10v6H19z" fill="#ff5c8a"/><path d="M24 17h3v5h-3zM32 17h3v5h-3z" fill="#5ee0d0"/></svg></div>
 <div id="fish" aria-hidden="true"></div>
 <div class="scan"></div>
 <div id="hud"><div class="hp"><small>Depth</small><b id="hd">0m</b></div><div class="pg"><div id="seg"></div><small id="pl">Prompt 1 of 7</small></div><div class="hp r"><small>Score</small><b id="hs">0</b></div></div>
@@ -216,6 +219,7 @@ body.diving .nt,body.diving .rt2,body.diving #you,body.diving #world,body.diving
 <div id="bar" class="hidden"></div>
 <div id="who"></div>
 <div id="notes" aria-hidden="true"></div>
+<div id="fx" aria-hidden="true"></div>
 <div id="dv" class="hidden" aria-hidden="true"></div>
 <div id="ruler" aria-hidden="true"><div id="you"><b>YOU</b></div></div>
 <button id="snd" class="px sm" type="button">Sound on</button>
@@ -268,9 +272,9 @@ let PROMPTS = [
  {q:"Name a musical instrument", a:{10:["guitar","piano","drums","violin"],15:["theremin"],30:["oboe","banjo","harp","cello","ukulele"],60:["sitar","marimba","bagpipes","zither","dulcimer"],85:["hurdy gurdy","nyckelharpa","ocarina","kora","oud"],100:["cimbalom","serpent","glass armonica","hang drum"]}},
  {q:"Name a famous bridge", a:{10:["golden gate bridge","brooklyn bridge","london bridge"],15:["tower bridge"],30:["rialto bridge","sydney harbour bridge","ponte vecchio","millau viaduct"],60:["charles bridge","pont du gard","bridge of sighs","akashi kaikyo bridge"],85:["stari most","kintai bridge","helix bridge","pont neuf"],100:["khaju bridge","bixby creek bridge","si-o-se-pol","ha'penny bridge"]}}
 ];
-const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();
-const prep=ps=>{ps.forEach(p=>{p.map={};for(const [pts,l] of Object.entries(p.a))l.forEach(w=>p.map[norm(w)]=+pts);});return ps;}; prep(PROMPTS);
-const lookup=(p,g)=>{const n=norm(g);return p.map[n]??p.map[n.replace(/s$/,"")]??0;};
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim().replace(/^(the|a|an) (?=\S)/,"");
+const prep=ps=>{ps.forEach(p=>{p.map={};for(const [pts,l] of Object.entries(p.a))l.forEach(w=>{const k=norm(w);p.map[k]=+pts;const k2=k.replace(/ /g,"");if(!(k2 in p.map))p.map[k2]=+pts;});});return ps;}; prep(PROMPTS);
+const lookup=(p,g)=>{const n=norm(g),c=n.replace(/ /g,"");return p.map[n]??p.map[c]??p.map[n.replace(/s$/,"")]??p.map[c.replace(/s$/,"")]??0;};
 const bearing = t => t>=450?"One in a Crownllion":t>=351?"Deep Cut":t>=251?"Rare":t>=151?"Schooler":"Plankton";
 
 const CC={10:"#9aa7b4",15:"#5fd38d",30:"#4aa8ff",60:"#ff9f43",85:"#9b7bff",100:"#ffd23f"};
@@ -312,11 +316,16 @@ function camTo(m,off=0,yo=m){
 const camFor=d=>Math.max(0,d-.22/KPM); /* keeps your depth about mid-screen */
 bgBuild(); addEventListener("resize",()=>{bgBuild();camTo(...lastCam);});
 /* little waves along the surface */
-const wv=$("wave"), w1=$("w1"), w2=$("w2"), still=matchMedia("(prefers-reduced-motion: reduce)").matches; let wf=0;
+const wv=$("wave"), w0=$("w0"), w1=$("w1"), w2=$("w2"), still=matchMedia("(prefers-reduced-motion: reduce)").matches; let wf=0;
 function drawWave(t){
-  const W=innerWidth, hz=16, step=8; let line="";
-  for(let x=0;x<=W+step;x+=step){const y=hz+3.2*Math.sin(x/68+t*1.2)+1.8*Math.sin(x/29-t*1.9)+1.2*Math.sin(x/150+t*.5);line+=(x?"L":"M")+x+","+y.toFixed(1);}
-  wv.setAttribute("viewBox",`0 0 ${W} 60`); w1.setAttribute("d",line+`L${W+step},60L0,60Z`); w2.setAttribute("d",line);
+  const W=innerWidth, hz=16, step=8; let back="", line="";
+  for(let x=0;x<=W+step;x+=step){
+    const yb=hz-4+6*Math.sin(x/95-t*.9+1.3)+3*Math.sin(x/43+t*1.4);
+    const yf=hz+7*Math.sin(x/110+t*1.1)+4*Math.sin(x/45-t*1.7)+2*Math.sin(x/200+t*.6);
+    back+=(x?"L":"M")+x+","+yb.toFixed(1); line+=(x?"L":"M")+x+","+yf.toFixed(1);
+  }
+  wv.setAttribute("viewBox",`0 0 ${W} 60`);
+  w0.setAttribute("d",back+`L${W+step},60L0,60Z`); w1.setAttribute("d",line+`L${W+step},60L0,60Z`); w2.setAttribute("d",line);
 }
 (function loop(now){ if(!(wf++%2)||still)drawWave(now/1000); if(!still)requestAnimationFrame(loop); })(0);
 let AC=null, sayT=null, muted=false;
@@ -339,6 +348,26 @@ function toot(bonus=0){
     const env=AC.createGain(); env.gain.setValueAtTime(.0001,t); env.gain.exponentialRampToValueAtTime(.32,t+.03); env.gain.exponentialRampToValueAtTime(.0001,t+dur);
     o.connect(lp); lp.connect(flutter); flutter.connect(env); env.connect(AC.destination);
     [o,vib,fl].forEach(n=>{n.start(t);n.stop(t+dur+.05);});
+  }catch(e){}
+}
+/* a few bubbly "blub"s sliding down in pitch, plus a soft water whoosh */
+let noiseBuf=null;
+function descendSound(){
+  if(muted)return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended")AC.resume();
+    const t=AC.currentTime;
+    [0,.12,.26,.43].forEach((o,k)=>{
+      const f=640-k*110, osc=AC.createOscillator(), g=AC.createGain();
+      osc.type="sine"; osc.frequency.setValueAtTime(f,t+o); osc.frequency.exponentialRampToValueAtTime(f*1.7,t+o+.07);
+      g.gain.setValueAtTime(.0001,t+o); g.gain.exponentialRampToValueAtTime(.28,t+o+.015); g.gain.exponentialRampToValueAtTime(.0001,t+o+.14);
+      osc.connect(g); g.connect(AC.destination); osc.start(t+o); osc.stop(t+o+.16);
+    });
+    if(!noiseBuf){noiseBuf=AC.createBuffer(1,AC.sampleRate*.7,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}
+    const src=AC.createBufferSource(), lp=AC.createBiquadFilter(), ng=AC.createGain();
+    src.buffer=noiseBuf; lp.type="lowpass"; lp.frequency.setValueAtTime(1100,t); lp.frequency.exponentialRampToValueAtTime(180,t+.65);
+    ng.gain.setValueAtTime(.0001,t); ng.gain.exponentialRampToValueAtTime(.08,t+.08); ng.gain.exponentialRampToValueAtTime(.0001,t+.65);
+    src.connect(lp); lp.connect(ng); ng.connect(AC.destination); src.start(t); src.stop(t+.7);
   }catch(e){}
 }
 $("pc").onclick=()=>{
@@ -400,6 +429,14 @@ function showSug(from,to){
   s.append(l,el("small","","submit again to confirm \u00B7 or edit")); s.classList.remove("hidden");
 }
 /* a guess that isn't on the answer sheet doesn't end the prompt */
+function bubbleBurst(){
+  const fx=$("fx"), r=$("gi").getBoundingClientRect();
+  for(let k=0;k<14;k++){
+    const b=el("div","wb"), sz=(6+Math.random()*12).toFixed(0);
+    b.style.cssText=`left:${(r.left+Math.random()*r.width).toFixed(0)}px;top:${(r.top-4).toFixed(0)}px;width:${sz}px;height:${sz}px;--sx:${(Math.random()*80-40)|0}px;--rise:${(180+Math.random()*220)|0}px;--d:${(1.1+Math.random()*.9).toFixed(2)}s;--dl:${(Math.random()*.35).toFixed(2)}s`;
+    fx.append(b); setTimeout(()=>b.remove(),2800);
+  }
+}
 function guess(g){
   if(locked)return; g=g.trim(); if(!g)return;
   if(lookup(PROMPTS[i],g))return settle(g);
@@ -407,6 +444,7 @@ function guess(g){
   if(near){const t=titleCase(near);$("gi").value=t;$("gi").focus();showSug(g,t);return;}
   const dupe=tries.includes(norm(g)); if(!dupe)tries.push(norm(g));
   $("rv").textContent=dupe?"already tried. think rarer.":"not on the sheet. try another.";
+  bubbleBurst();
   const gi=$("gi"); gi.value=""; gi.focus();
 }
 /* the answer sinks past each tier line down to its depth, with the camera following */
@@ -449,7 +487,7 @@ async function settle(g,timedout){
     el("p","rf2",`total depth ${(total*10).toLocaleString()}m`));
   const bar=$("bar"); bar.innerHTML="";
   const nb=el("button","px dsc",i+1<PROMPTS.length?"Descend \u25BC":"Results \u25BC");
-  nb.onclick=()=>{i++;i<PROMPTS.length?showPrompt():finish(true);};
+  nb.onclick=()=>{descendSound();i++;i<PROMPTS.length?showPrompt():finish(true);};
   bar.append(nb); nb.focus();
   sink();
 }
