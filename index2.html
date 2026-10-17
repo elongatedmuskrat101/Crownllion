@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#050a14">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 11%27%3E%3Cpath fill=%27%23ffd23f%27 d=%27M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM1 4h14v7H1z%27/%3E%3C/svg%3E">
+<title>Crownllion – the daily dive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{--cy:#3fd8f0;--pk:#ff4f8b;--ink:#dff3fa;--navy:#0f1b33;--bg:#050a14;--gold:#ffd23f}
+*{box-sizing:border-box;margin:0}
+html,body{min-height:100%}
+body{font-family:"VT323",ui-monospace,monospace;font-size:1.35rem;color:var(--ink);background:var(--bg);overflow-x:hidden}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#world{position:fixed;inset:0;z-index:0;background-color:#02050a;background-image:linear-gradient(180deg,#8fc8e4 0,#e3f1f7 62%,#2a78ab 62.2%,#1a5686 78%,#0e3659 100%);background-repeat:no-repeat;transition:background-position 1.8s ease-in-out}
+#bw{position:fixed;inset:0;z-index:1;pointer-events:none;transform:translateY(34vh);transition:transform 1.8s ease-in-out}
+#sky{position:fixed;inset:0;z-index:1;pointer-events:none;transition:transform 1.8s ease-in-out}
+.cloud{position:absolute;height:auto;image-rendering:pixelated}
+.boat{position:absolute;left:max(2vw,calc(50% - 570px));top:calc(28vh - 128px);width:224px;animation:bob 3.2s steps(4) infinite}
+@keyframes bob{50%{transform:translateY(5px)}}
+.scan{position:fixed;inset:0;z-index:50;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.07) 0 1px,transparent 1px 3px)}
+/* pixel controls */
+.px{letter-spacing:.3em;text-transform:uppercase;background:var(--navy);color:#fff;border:3px solid var(--cy);padding:12px 22px;box-shadow:4px 4px 0 #02050a;cursor:pointer;font-size:1.4rem}
+.px:hover{background:#17294f}
+.px:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #02050a}
+.px:disabled{opacity:.45;cursor:not-allowed}
+.px.sm{padding:4px 12px;font-size:1.1rem;letter-spacing:.15em}
+#who{position:fixed;top:14px;right:14px;z-index:30;display:flex;gap:10px;align-items:center;font-size:1.2rem;text-shadow:2px 2px 0 #02050a}
+/* auth */
+#auth{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;padding:9vh 16px 16px;overflow:auto}
+#auth.hidden{display:none}
+.title{position:relative;font-size:clamp(3.6rem,15vw,9rem);line-height:1;letter-spacing:.1em;color:transparent;padding-left:.1em}
+.title::before,.title::after{content:attr(data-t);position:absolute;inset:0;padding-left:.1em;-webkit-text-stroke:2px}
+.title::before{-webkit-text-stroke-color:var(--pk);transform:translateX(-3px)}
+.title::after{-webkit-text-stroke-color:var(--cy);transform:translateX(3px)}
+.sub{margin-top:14px;color:var(--cy);font-size:clamp(1.4rem,4vw,2rem);letter-spacing:.5em;padding-left:.5em;text-shadow:2px 2px 0 rgba(5,10,20,.3)}
+.rules{margin-top:10px;font-size:1.2rem;letter-spacing:.12em;color:#274a63;text-align:center}
+.box{margin-top:clamp(70px,22vh,200px);width:min(440px,100%);background:var(--navy);border:3px solid var(--cy);box-shadow:6px 6px 0 #02050a;padding:22px}
+.box h2{font-size:2rem;letter-spacing:.2em;font-weight:400;text-transform:uppercase}
+.box label{display:block;margin:14px 0 4px;color:var(--cy);letter-spacing:.2em;text-transform:uppercase;font-size:1.1rem}
+.box input{width:100%;background:var(--bg);border:2px solid #25507a;padding:8px 12px;font-size:1.5rem}
+.box input:focus{border-color:var(--cy);outline:none}
+.box .px{width:100%;margin-top:20px}
+#err{color:var(--pk);min-height:1.2em;margin-top:10px}
+.hidden{display:none!important}
+#home{margin-top:clamp(70px,22vh,200px);width:min(600px,100%);text-align:center}
+.begin{width:100%;font-size:2.2rem;letter-spacing:.4em;padding:20px 12px;border-width:4px}
+.dive-no{margin-top:14px;color:var(--cy);letter-spacing:.2em;font-size:1.15rem;text-shadow:2px 2px 0 #02050a}
+.sw{background:none;border:0;color:var(--cy);margin-top:12px;text-decoration:underline;cursor:pointer;letter-spacing:.08em}
+/* game */
+main{position:relative;z-index:5;max-width:680px;margin:0 auto;padding:25vh 18px 130px;width:100%}
+body:not(.in) main,body:not(.in) #notes,body:not(.in) #dv,body:not(.in) #ruler,body:not(.in) #hud,body:not(.in) #bar,body:not(.in) #fish,body:not(.in) #pc{display:none}
+body.in #who{top:96px;left:8px;right:auto;flex-direction:column;align-items:flex-start;gap:6px}
+.top{display:flex;justify-content:space-between;color:var(--cy);letter-spacing:.15em;text-transform:uppercase;font-size:1.2rem}
+.clock{display:flex;align-items:center;gap:14px;margin:10px 0 26px}
+.secs{font-size:3.4rem;line-height:1;min-width:2ch;text-align:right;color:#fff;text-shadow:3px 3px 0 #02050a}
+.secs.low{color:var(--pk)}
+.clock .air{flex:1;margin:0}
+.air{height:14px;margin:12px 0 30px;border:2px solid #25507a;padding:2px}
+.air div{height:100%;width:100%;background:repeating-linear-gradient(90deg,var(--cy) 0 10px,transparent 10px 13px);transition:width 1s linear}
+.air.low div{background:repeating-linear-gradient(90deg,var(--pk) 0 10px,transparent 10px 13px)}
+.q{font-weight:400;font-size:clamp(2.6rem,9vw,4.4rem);line-height:.95;color:#fff;text-shadow:4px 4px 0 #02050a;margin-bottom:28px}
+.q small{display:block;font-size:1.3rem;color:var(--cy);letter-spacing:.2em;text-transform:uppercase;text-shadow:none;margin-bottom:10px}
+form.g{display:flex;gap:12px}
+.g input{flex:1;min-width:0;background:var(--bg);border:3px solid #25507a;padding:8px 14px;font-size:1.7rem}
+.g input:focus{border-color:var(--cy);outline:none}
+.reveal{min-height:84px;margin-top:20px;font-size:1.4rem}
+.reveal .t{font-size:2.6rem;line-height:1;text-shadow:3px 3px 0 #02050a}
+.t0 .t{color:var(--pk)}.t30 .t,.t60 .t{color:var(--cy)}.t85 .t{color:var(--pk)}.t100 .t{color:var(--gold)}
+.ds{font-size:2.4rem;letter-spacing:.3em;text-align:center;margin-top:20vh;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.flash{animation:fl .7s steps(3)}
+@keyframes fl{50%{filter:brightness(2.2)}}
+.big{font-size:clamp(4rem,14vw,7rem);line-height:1;color:#fff;text-shadow:4px 4px 0 var(--pk)}
+.rows{margin:16px 0}
+.rows details{border-bottom:2px dashed #25507a;padding:5px 0}
+.rows summary{display:flex;gap:12px;cursor:pointer;list-style:none}
+.rows summary::-webkit-details-marker{display:none}
+.rows summary span:first-child{flex:1;color:var(--cy)}
+.rows summary::after{content:"\25BE";color:var(--cy)}
+.rows details[open] summary::after{content:"\25B4"}
+.sheet{margin:8px 0 6px;padding:10px 12px;background:rgba(5,10,20,.6);border-left:3px solid var(--cy);font-size:1.15rem}
+.sheet p{margin:0 0 8px}.sheet b{font-weight:400}
+.sheet .mine{color:var(--gold);text-decoration:underline}
+#crown{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,10,20,.62);pointer-events:none}
+#crown svg{width:min(55vw,250px);height:auto;filter:drop-shadow(6px 6px 0 #02050a);animation:pop .5s steps(5) both}
+#crown.gold svg{filter:drop-shadow(0 0 26px #ffd23f) drop-shadow(6px 6px 0 #02050a)}
+#crown p{font-size:2.8rem;letter-spacing:.2em;text-transform:uppercase;margin-top:14px;text-shadow:3px 3px 0 #02050a;line-height:1}
+@keyframes pop{0%{transform:scale(.2) rotate(-10deg);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+body:not(.res) .panel{display:none}
+.panel{margin-top:40px;background:rgba(15,27,51,.88);border:3px solid var(--cy);box-shadow:6px 6px 0 #02050a;padding:18px}
+.panel h2{font-weight:400;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px}
+.row{display:grid;grid-template-columns:34px 1fr auto auto;gap:12px;padding:4px 0;border-bottom:2px dashed #25507a}
+.row:last-child{border:0}
+.row.me{color:var(--gold)}
+.row em{font-style:normal;color:var(--cy)}
+/* depth ruler */
+@media(prefers-reduced-motion:reduce){*,#world,#sky{transition:none!important;animation:none!important}}
+@media(max-width:560px){#ruler{width:48px}.boat{width:150px;top:calc(28vh - 86px)}.hp{width:96px!important;padding:8px 10px!important}.hp b{font-size:1.7rem!important}#hud{gap:8px!important}}
+/* game screen */
+:root{--n:polygon(0 8px,8px 8px,8px 0,calc(100% - 8px) 0,calc(100% - 8px) 8px,100% 8px,100% calc(100% - 8px),calc(100% - 8px) calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,8px calc(100% - 8px),0 calc(100% - 8px))}
+#hud{position:fixed;top:0;left:0;right:0;z-index:30;display:flex;justify-content:center;gap:clamp(16px,16vw,330px);padding:6px 12px;align-items:flex-start;pointer-events:none}
+.hp{width:150px;padding:10px 18px;background:rgba(5,10,20,.9);clip-path:var(--n)}
+.hp small,.pg small{display:block;letter-spacing:.3em;font-size:.95rem;color:#7fb7d4;text-transform:uppercase}
+.hp b{display:block;font-weight:400;font-size:2.2rem;line-height:1;color:var(--cy)}
+.hp.r{text-align:right}.hp.r b{color:var(--pk)}
+.pg{text-align:center;padding-top:22px}
+#seg{display:flex;gap:2px;justify-content:center}
+#seg i{width:18px;height:18px;background:var(--navy);border:2px solid #02050a}
+.pg small{margin-top:6px;font-size:.9rem}
+.pcard{width:min(600px,100%);margin:0 auto;background:rgba(5,10,20,.84);padding:22px 30px;clip-path:var(--n)}
+.pcard .pl{display:block;color:var(--pk);letter-spacing:.3em;text-transform:uppercase;font-size:1.1rem}
+.pcard .q{font-size:clamp(2rem,5.5vw,3rem);line-height:1.1;margin:10px 0}
+.hint{color:#7fb7d4;letter-spacing:.2em;font-size:1.05rem}
+.miss{color:var(--pk);min-height:1.3em;margin-top:6px}
+.rcard{text-align:center;padding-top:4vh}
+.rt{font-weight:400;font-size:clamp(3rem,9vw,5.5rem);line-height:1;letter-spacing:.08em;text-transform:uppercase;text-shadow:4px 4px 0 #02050a;color:#a9bccb}
+.ra{font-size:2rem;margin-top:14px}.rp{font-size:2.4rem;color:var(--ink);margin-top:6px;text-transform:uppercase}.rf{color:#7fb7d4;letter-spacing:.12em;margin-top:8px}
+#bar{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:34px 16px 22px;display:flex;justify-content:center;background:linear-gradient(180deg,transparent,rgba(3,8,16,.96) 45%)}
+#bar.hidden{display:none}
+#gf{display:flex;gap:14px;align-items:flex-start;width:min(760px,100%)}
+.dial{width:78px;height:78px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:2.4rem;color:var(--cy);background:radial-gradient(circle,#091426 0 56%,transparent 58%),conic-gradient(var(--c,var(--cy)) var(--p,100%),#14264a 0)}
+.dial.low{--c:var(--pk);color:var(--pk)}
+.mid{flex:1;min-width:0;padding-top:10px}
+.mid input{width:100%;height:58px;background:#050a14;border:3px solid var(--cy);padding:4px 16px;font-size:1.8rem}
+.mid input:focus{outline:none;box-shadow:0 0 0 3px rgba(63,216,240,.25)}
+#bar .air{height:6px;margin:6px 0 0;border:0;padding:0;background:#10203c}
+#bar .air div{background:var(--cy)}#bar .air.low div{background:var(--pk)}
+.px.pink{background:var(--pk);border-color:var(--pk);color:#fff;height:58px;margin-top:10px}
+.px.dsc{width:min(420px,90vw);font-size:1.8rem;letter-spacing:.35em;border-width:4px}
+#fish{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.fish{position:absolute;left:0;animation:swim linear infinite}
+@keyframes swim{from{transform:translateX(-60px)}to{transform:translateX(calc(100vw + 60px))}}
+#pc{position:fixed;left:24px;top:72vh;z-index:6;width:46px;background:none;border:0;padding:0;cursor:pointer;filter:drop-shadow(0 0 12px rgba(255,210,63,.7));animation:bob 3s steps(4) infinite}
+#pc svg{display:block;width:100%;height:auto;transform-origin:50% 60%}
+#pc svg.spin{animation:spin .85s ease-out}
+#pc svg.dive{animation:dive 1.8s ease-in-out}
+@keyframes spin{0%{transform:translateY(0) rotate(0)}30%{transform:translateY(-26px) rotate(240deg) scale(1.2)}65%{transform:translateY(-8px) rotate(520deg) scale(1.1)}100%{transform:translateY(0) rotate(720deg) scale(1)}}
+@keyframes dive{0%{transform:translateY(0) rotate(0)}45%{transform:translateY(var(--dd,12vh)) rotate(-14deg)}100%{transform:translateY(0) rotate(0)}}
+#sug{position:absolute;left:50%;bottom:104px;transform:translateX(-50%);z-index:2;background:rgba(5,10,20,.95);clip-path:var(--n);padding:10px 26px;text-align:center;white-space:nowrap;font-size:1.4rem}
+#sug i{font-style:normal;color:#9db6c6}#sug b{font-weight:400;color:var(--cy)}
+#sug small{display:block;margin-top:4px;color:#7fb7d4;letter-spacing:.12em;font-size:1rem}
+.rf2{margin-top:6px;color:#4f7a94;letter-spacing:.15em;font-size:1.1rem}
+.rc svg{display:block;width:76px;height:auto;margin:16px auto 0;filter:drop-shadow(3px 3px 0 #02050a);animation:pop .45s steps(5) both}
+@keyframes pop{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
+.rc+.ra{margin-top:12px}
+/* summary page */
+body.res main{max-width:560px;padding:26px 18px 90px}
+body.res #notes,body.res #dv,body.res #hud,body.res #ruler,body.res #pc,body.res #fish{display:none}
+body.res #world{filter:brightness(.4) saturate(.7)}
+body.res #sky{opacity:.16;filter:brightness(.4)}
+body.res #bw{filter:brightness(.55)}
+body.res #who{top:56px}
+.sh{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.slogo{font-size:2rem;letter-spacing:.1em;color:#fff;text-shadow:-2px 0 var(--pk),2px 0 var(--cy)}
+.sdate{color:#7fb7d4;letter-spacing:.2em;text-transform:uppercase;font-size:1rem}
+.ss{display:flex;align-items:flex-end;gap:12px;margin:14px 0 4px}
+.sbig{font-size:5.6rem;line-height:.85;color:#fff}
+.sdep{color:var(--cy);font-size:1.15rem;padding-bottom:8px}
+#bell svg,.sum svg{display:block;width:100%;height:auto}
+.spct{color:var(--cy);letter-spacing:.15em;text-transform:uppercase;font-size:1.1rem;margin:6px 0 14px}
+.sh3{font-weight:400;color:#7fb7d4;letter-spacing:.25em;text-transform:uppercase;font-size:1.05rem;margin:34px 0 10px}
+.bear{display:grid;grid-template-columns:24px 76px 1fr;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #1d3550;color:#8aa3b3}
+.bear.on{color:#fff}.bear b{font-weight:400}
+.bear svg{width:20px!important}
+.say{position:absolute;left:58px;top:-6px;background:var(--navy);border:3px solid var(--cy);padding:0 10px;white-space:nowrap;color:#fff;font-size:1.4rem;letter-spacing:.1em;pointer-events:none}
+body.boot *{transition:none!important}
+/* waves */
+#wave{position:absolute;left:0;top:calc(28vh - 16px);width:100%;height:60px;overflow:visible}
+/* depth layers: ruler, notes, tier lines */
+#ruler{position:fixed;top:0;bottom:0;right:0;width:86px;z-index:6;overflow:hidden;pointer-events:none}
+#ruler::after{content:"";position:absolute;right:0;top:0;bottom:0;width:3px;background:#25507a}
+.rt2,#you{position:absolute;top:0;right:0;width:100%;border-top:2px solid #25507a;color:#7fb7d4;font-size:1rem;transition:transform 1.8s ease-in-out}
+.rt2 span,#you b{position:absolute;right:10px;top:-17px;font-weight:400}
+#you b{right:auto;left:8px}
+#you{border-top-color:var(--pk);color:var(--pk);z-index:2}
+#you b{font-size:1.2rem}
+#notes{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.nt{position:absolute;top:0;font-size:1.2rem;letter-spacing:.08em;white-space:nowrap;color:rgba(190,215,230,.55);transition:transform 1.8s ease-in-out}
+.nt.L{left:90px}.nt.R{right:100px}
+.nt.L span::before,.nt.R span::after{content:"";display:inline-block;width:26px;border-top:1px solid currentColor;vertical-align:middle}
+.nt.L span::before{margin-right:10px}.nt.R span::after{margin-left:10px}
+.nt.zn{color:rgba(159,214,238,.85);text-transform:uppercase;letter-spacing:.25em}
+@media(max-width:700px){.nt{display:none}}
+#dv{position:fixed;inset:0;z-index:4;pointer-events:none;overflow:hidden}
+#dv.hidden{display:none}
+.tl{position:absolute;top:0;left:calc(50% - min(320px,44vw));width:min(640px,88vw);border-top:2px dashed rgba(190,215,230,.4);color:rgba(190,215,230,.6)}
+.tl span{position:absolute;right:0;top:-24px;font-size:1.1rem;letter-spacing:.15em;text-transform:uppercase}
+.tl.hit{color:var(--c);border-top-color:var(--c);filter:drop-shadow(0 0 6px var(--c))}
+.dw{position:absolute;top:0;left:50%}
+.dl{background:rgba(5,10,20,.92);clip-path:var(--n);padding:6px 22px;font-size:1.9rem;color:var(--cy);letter-spacing:.12em;white-space:nowrap}
+.dcr{position:absolute;right:-18px;top:-30px;width:38px;animation:bob 1.2s steps(3) infinite}
+.bub{position:absolute;width:9px;height:9px;border:2px solid #9fd6e0;border-radius:50%;animation:bub 1.7s linear forwards}
+@keyframes bub{to{transform:translateY(-150px);opacity:0}}
+body.diving .nt,body.diving .rt2,body.diving #you,body.diving #world,body.diving #sky,body.diving #bw{transition:none!important}
+#snd{position:fixed;top:12px;left:8px;z-index:31}
+</style>
+</head>
+<body class="boot">
+<div id="world"></div>
+<div id="sky" aria-hidden="true">
+  <svg width="0" height="0" style="position:absolute"><symbol id="cl" viewBox="0 0 96 32"><path d="M24 0h24v8h16v8h24v8h-8v8H8v-8H0v-8h16v-8h8z" fill="#fff" opacity=".93"/></symbol></svg>
+  <svg class="cloud" style="top:9vh;left:-2vw;width:300px" viewBox="0 0 96 32" shape-rendering="crispEdges"><use href="#cl"/></svg>
+  <svg class="cloud" style="top:3vh;left:calc(50% - 280px);width:360px" viewBox="0 0 96 32" shape-rendering="crispEdges"><use href="#cl"/></svg>
+  <svg class="cloud" style="top:6vh;right:-3vw;width:330px" viewBox="0 0 96 32" shape-rendering="crispEdges"><use href="#cl"/></svg>
+  
+</div>
+<div id="bw" aria-hidden="true"><svg id="wave" viewBox="0 0 1600 60" preserveAspectRatio="none"><defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a78ab"/><stop offset=".5" stop-color="#2a78ab"/><stop offset="1" stop-color="#2a78ab" stop-opacity="0"/></linearGradient></defs><rect x="0" y="8" width="100%" height="14" fill="#e3f1f7"/><path id="w1" fill="url(#wg)" d="M0,16L1600,16L1600,60L0,60Z"/><path id="w2" d="M0,16L1600,16" fill="none" stroke="#9fe6dc" stroke-opacity=".75" stroke-width="2"/></svg><svg class="boat" viewBox="0 0 56 40" shape-rendering="crispEdges"><path d="M0 24h56v4h-4v4H8v-4H0z" fill="#0d1f33"/><path d="M20 14h20v10H20z" fill="#0d1f33"/><path d="M29 0h2v14h-2z" fill="#0d1f33"/><path d="M19 2h10v6H19z" fill="#ff5c8a"/><path d="M24 17h3v5h-3zM32 17h3v5h-3z" fill="#5ee0d0"/></svg></div>
+<div id="fish" aria-hidden="true"></div>
+<div class="scan"></div>
+<div id="hud"><div class="hp"><small>Depth</small><b id="hd">0m</b></div><div class="pg"><div id="seg"></div><small id="pl">Prompt 1 of 7</small></div><div class="hp r"><small>Score</small><b id="hs">0</b></div></div>
+<button id="pc" type="button" aria-label="Spin the crown"><svg viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="#ffd23f" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg><span class="say hidden" id="say"></span></button>
+<div id="bar" class="hidden"></div>
+<div id="who"></div>
+<div id="notes" aria-hidden="true"></div>
+<div id="dv" class="hidden" aria-hidden="true"></div>
+<div id="ruler" aria-hidden="true"><div id="you"><b>YOU</b></div></div>
+<button id="snd" class="px sm" type="button">Sound on</button>
+
+<main>
+  <div id="card"></div>
+  <section class="panel"><h2>Today's team dive</h2><div id="lb"><p>Loading scores…</p></div></section>
+  <section class="panel"><h2>All time scoreboard</h2><div id="all"><p>Loading scores…</p></div></section>
+</main>
+
+<div id="auth">
+  <h1 class="title" data-t="CROWNLLION">CROWNLLION</h1>
+  <p class="sub">the daily dive</p>
+  <p class="rules">7 prompts · 25 seconds each · rarer answers sink deeper</p>
+  <div class="box" id="box">
+    <h2 id="a-title">Log in</h2>
+    <form id="a-form">
+      <label for="u">Username</label><input id="u" required autocomplete="username">
+      <label for="p">Password</label><input id="p" type="password" required minlength="6" autocomplete="current-password">
+      <button class="px" id="a-btn">Log in</button>
+      <div id="err" role="alert"></div>
+    </form>
+    <button class="sw" id="a-sw" type="button">New here? Create an account</button>
+  </div>
+  <div id="home" class="hidden">
+    <button class="px begin" id="go">&#9660; Begin descent &#9660;</button>
+    <p class="dive-no" id="dive-no"></p>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { initializeFirestore, collection, doc, getDoc, setDoc, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyDtvXvvKSDW4w781kYm2e4lg47cC7Lx6NY", authDomain:"crownllion.firebaseapp.com", projectId:"crownllion",
+  storageBucket:"crownllion.firebasestorage.app", messagingSenderId:"65215415079", appId:"1:65215415079:web:5558871761efd11e48df02"
+});
+const auth = getAuth(app), db = initializeFirestore(app,{experimentalAutoDetectLongPolling:true});
+
+/* ---------- Game data: tier points -> accepted answers ---------- */
+const TIERS = {0:["Not on the sheet"],10:["Plankton"],15:["Too Clever"],30:["Schooler"],60:["Rare"],85:["Deep Cut"],100:["One in a Crownllion"]};
+let PROMPTS = [
+ {q:"Name a type of sausage", a:{10:["bratwurst","hot dog","pepperoni","chorizo","salami"],15:["liverwurst"],30:["kielbasa","andouille","mortadella","bologna","chipolata"],60:["boudin","merguez","lap cheong","cumberland","weisswurst"],85:["sobrasada","nduja","saucisson","zampone","lukanka"],100:["sujuk","blutwurst","isterband","landjager"]}},
+ {q:"Name a country in Africa", a:{10:["egypt","nigeria","kenya","south africa"],15:["morocco"],30:["ghana","ethiopia","tanzania","algeria","senegal"],60:["namibia","botswana","malawi","mali","angola"],85:["eswatini","djibouti","burkina faso","lesotho","gabon"],100:["sao tome and principe","comoros","equatorial guinea","eritrea"]}},
+ {q:"Name a chess opening", a:{10:["sicilian defense","queens gambit","italian game","ruy lopez"],15:["kings gambit"],30:["french defense","caro-kann","london system","english opening"],60:["scandinavian defense","pirc defense","catalan opening","benoni defense"],85:["alekhine's defense","grunfeld defense","vienna game","budapest gambit"],100:["orangutan opening","grob attack","elephant gambit","latvian gambit"]}},
+ {q:"Name a cheese", a:{10:["cheddar","brie","mozzarella","parmesan"],15:["stilton"],30:["gouda","gruyere","halloumi","feta","camembert"],60:["manchego","taleggio","cotija","havarti","pecorino"],85:["stichelton","epoisses","mimolette","cabrales","raclette"],100:["ossau-iraty","appenzeller","casu marzu","vacherin mont d'or"]}},
+ {q:"Name a programming language", a:{10:["python","java","javascript","c++"],15:["haskell"],30:["rust","kotlin","swift","ruby","php"],60:["erlang","ocaml","lua","scala","julia"],85:["forth","prolog","nim","smalltalk","zig"],100:["apl","janet","pony","brainfuck","j"]}},
+ {q:"Name a musical instrument", a:{10:["guitar","piano","drums","violin"],15:["theremin"],30:["oboe","banjo","harp","cello","ukulele"],60:["sitar","marimba","bagpipes","zither","dulcimer"],85:["hurdy gurdy","nyckelharpa","ocarina","kora","oud"],100:["cimbalom","serpent","glass armonica","hang drum"]}},
+ {q:"Name a famous bridge", a:{10:["golden gate bridge","brooklyn bridge","london bridge"],15:["tower bridge"],30:["rialto bridge","sydney harbour bridge","ponte vecchio","millau viaduct"],60:["charles bridge","pont du gard","bridge of sighs","akashi kaikyo bridge"],85:["stari most","kintai bridge","helix bridge","pont neuf"],100:["khaju bridge","bixby creek bridge","si-o-se-pol","ha'penny bridge"]}}
+];
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();
+const prep=ps=>{ps.forEach(p=>{p.map={};for(const [pts,l] of Object.entries(p.a))l.forEach(w=>p.map[norm(w)]=+pts);});return ps;}; prep(PROMPTS);
+const lookup=(p,g)=>{const n=norm(g);return p.map[n]??p.map[n.replace(/s$/,"")]??0;};
+const bearing = t => t>=450?"One in a Crownllion":t>=351?"Deep Cut":t>=251?"Rare":t>=151?"Schooler":"Plankton";
+
+const CC={10:"#9aa7b4",15:"#5fd38d",30:"#4aa8ff",60:"#ff9f43",85:"#9b7bff",100:"#ffd23f"};
+const CROWN=c=>`<svg viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="${c}" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></svg>`;
+const TIME=25, MAXDEPTH=7000;
+/* Day key uses the player's LOCAL date so the dive rolls over at local midnight (not UTC).
+   LAUNCH is Dive #1. Change it to the date your first dive should be. */
+const LAUNCH="2026-10-17";
+const _d=new Date(), today=`${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,"0")}-${String(_d.getDate()).padStart(2,"0")}`;
+const diveNo=Math.max(1,Math.round((Date.parse(today)-Date.parse(LAUNCH))/864e5)+1);
+const $=id=>document.getElementById(id);
+const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;};
+let todayRows=[], tries=[], user=null, i=0, total=0, results=[], timer=null, left=TIME, locked=false;
+
+/* ---------- Scene: sky lifts away and the sea darkens as you sink ---------- */
+const KPM=.0016; /* screen heights per metre */
+const ANN=[[100,"light begins to fade","L"],[200,"most sunlight stops here","R"],[332,"record scuba dive \u00B7 332m","R"],[500,"emperor penguins dive this deep","L"],[1000,"sperm whales hunt below here","R"],[2000,"no sunlight at all down here","L"],[3800,"the titanic rests near here","R"],[6000,"ocean trenches start here","R"]];
+const ZONES=[[200,"twilight zone"],[1000,"midnight zone"],[4000,"the abyss"],[6000,"hadal zone"]];
+const NODES=[];
+const mkNode=(parent,cls,txt,m)=>{const n=el("div",cls);if(txt)n.append(el("span","",txt));n.m=m;parent.append(n);NODES.push(n);};
+for(let m=100;m<=MAXDEPTH;m+=100)mkNode($("ruler"),"rt2",`-${m.toLocaleString()}m`,m);
+ANN.forEach(([m,t,sd])=>mkNode($("notes"),"nt "+sd,t,m));
+ZONES.forEach(([m,t])=>mkNode($("notes"),"nt L zn","\u25BC "+t,m));
+const you=$("you"); let lastCam=[0,0,0];
+/* the sea is built in hard-edged layers so you can see each zone get darker */
+function bgBuild(){
+  const H=innerHeight,k=KPM*H,b=.88*H,P=d=>(b+d*k).toFixed(0)+"px",w=$("world").style;
+  w.backgroundImage=`linear-gradient(180deg,#8fc8e4 0,#8fc8e4 ${(.6*H).toFixed(0)}px,#e3f1f7 ${b.toFixed(0)}px,#2a78ab ${(b+1).toFixed(0)}px,#1d6296 ${P(100)},#1a5686 ${P(199)},#10406a ${P(200)},#0b3153 ${P(600)},#0a2644 ${P(999)},#071a31 ${P(1000)},#06142a ${P(2500)},#050e1c ${P(3999)},#040a14 ${P(4000)},#040a14 ${P(5999)},#02060d ${P(6000)},#02050a ${P(MAXDEPTH)})`;
+  w.backgroundSize=`100% ${(b+MAXDEPTH*k).toFixed(0)}px`;
+}
+function camTo(m,off=0,yo=m){
+  lastCam=[m,off,yo];
+  const H=innerHeight,k=KPM*H,hz=.28*H,y=-m*k;
+  $("world").style.backgroundPosition=`0 ${(y+off-.6*H).toFixed(0)}px`;
+  $("sky").style.transform=`translateY(${y}px)`; $("bw").style.transform=`translateY(${y+off}px)`;
+  NODES.forEach(n=>n.style.transform=`translateY(${(hz+(n.m-m)*k+off).toFixed(1)}px)`);
+  you.style.transform=`translateY(${(hz+(yo-m)*k+off).toFixed(1)}px)`;
+}
+const camFor=d=>Math.max(0,d-.22/KPM); /* keeps your depth about mid-screen */
+bgBuild(); addEventListener("resize",()=>{bgBuild();camTo(...lastCam);});
+/* little waves along the surface */
+const wv=$("wave"), w1=$("w1"), w2=$("w2"), still=matchMedia("(prefers-reduced-motion: reduce)").matches; let wf=0;
+function drawWave(t){
+  const W=innerWidth, hz=16, step=8; let line="";
+  for(let x=0;x<=W+step;x+=step){const y=hz+3.2*Math.sin(x/68+t*1.2)+1.8*Math.sin(x/29-t*1.9)+1.2*Math.sin(x/150+t*.5);line+=(x?"L":"M")+x+","+y.toFixed(1);}
+  wv.setAttribute("viewBox",`0 0 ${W} 60`); w1.setAttribute("d",line+`L${W+step},60L0,60Z`); w2.setAttribute("d",line);
+}
+(function loop(now){ if(!(wf++%2)||still)drawWave(now/1000); if(!still)requestAnimationFrame(loop); })(0);
+let AC=null, sayT=null, muted=false;
+try{muted=localStorage.getItem("cr-mute")==="1";}catch(e){}
+$("snd").textContent=muted?"Sound off":"Sound on";
+$("snd").onclick=()=>{muted=!muted;try{localStorage.setItem("cr-mute",muted?"1":"0");}catch(e){}$("snd").textContent=muted?"Sound off":"Sound on";};
+const SAYS=["pfft!","toot!","brrrap!","pbbbt!","thpppt!","blorp!"];
+/* synthesised squeaks and rumbles (Web Audio, no files): random pitch, wobble and length each click */
+function toot(bonus=0){
+  if(muted)return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended")AC.resume();
+    const t=AC.currentTime, k=Math.floor(Math.random()*5), r=()=>.85+Math.random()*.3;
+    const dur=[.3,.65,.2,1,.45][k]*r()*(1+bonus/150), f0=[120,75,230,58,150][k]*r(), end=[.5,.4,1.8,.6,.3][k];
+    const o=AC.createOscillator(); o.type=k===1?"square":"sawtooth";
+    o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f0*end,t+dur);
+    const vib=AC.createOscillator(), vg=AC.createGain(); vib.frequency.value=18+Math.random()*30; vg.gain.value=f0*(.15+Math.random()*.25); vib.connect(vg); vg.connect(o.frequency);
+    const fl=AC.createOscillator(), fg=AC.createGain(), flutter=AC.createGain(); fl.frequency.value=20+Math.random()*35; fg.gain.value=.5; flutter.gain.value=.5; fl.connect(fg); fg.connect(flutter.gain);
+    const lp=AC.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=500+Math.random()*900;
+    const env=AC.createGain(); env.gain.setValueAtTime(.0001,t); env.gain.exponentialRampToValueAtTime(.32,t+.03); env.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(lp); lp.connect(flutter); flutter.connect(env); env.connect(AC.destination);
+    [o,vib,fl].forEach(n=>{n.start(t);n.stop(t+dur+.05);});
+  }catch(e){}
+}
+$("pc").onclick=()=>{
+  const v=$("pc").firstElementChild; v.classList.remove("spin","dive"); void v.getBoundingClientRect(); v.classList.add("spin");
+  toot();
+  const sy=$("say"); sy.textContent=SAYS[Math.floor(Math.random()*SAYS.length)]; sy.classList.remove("hidden");
+  clearTimeout(sayT); sayT=setTimeout(()=>sy.classList.add("hidden"),900);
+};
+const home=()=>camTo(0,innerHeight*.34);
+const FLAVOR={10:"the answer everyone blurts out.",15:"too clever. everyone reaches for it.",30:"solid. swimming with the school.",60:"genuinely uncommon. nice pull.",85:"real obscurity. not many get this deep.",100:"one in a crownllion. trench floor."};
+function hud(){
+  const sg=$("seg"); sg.innerHTML="";
+  PROMPTS.forEach((_,k)=>{const b=document.createElement("i");
+    if(k<results.length)b.style.background=results[k].pts?CC[results[k].pts]:"#5a6b7d";
+    else if(k===results.length)b.style.background="var(--pk)";
+    sg.append(b);});
+  $("pl").textContent=`Prompt ${Math.min(results.length+1,PROMPTS.length)} of ${PROMPTS.length}`;
+}
+function sink(){
+  const m=total*10;
+  camTo(camFor(m),0,m);
+  $("hd").textContent=m.toLocaleString()+"m"; $("hs").textContent=total; hud();
+}
+home(); requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.classList.remove("boot")));
+for(let k=0;k<6;k++){const f=el("div","fish");f.style.cssText=`top:${38+Math.random()*52}vh;animation-duration:${40+Math.random()*50}s;animation-delay:-${Math.random()*60}s`;f.innerHTML='<svg viewBox="0 0 14 6" width="28" shape-rendering="crispEdges"><path fill="#06223d" d="M0 0l3 3-3 3zM3 1h8v4H3zM11 2h3v2h-3z"/></svg>';$("fish").append(f);}
+
+/* ---------- Game flow ---------- */
+function showPrompt(){
+  const p=PROMPTS[i]; left=TIME; locked=false; tries=[]; document.body.classList.remove("res");
+  const card=$("card"); card.className="pcard"; card.innerHTML="";
+  card.append(el("small","pl",`Prompt ${i+1} of ${PROMPTS.length}`),el("h1","q",p.q),el("p","hint","\u25BC rarer answers sink deeper \u25BC"));
+  const rv=el("p","miss"); rv.id="rv"; rv.setAttribute("aria-live","polite"); card.append(rv);
+  const bar=$("bar"); bar.className="";
+  bar.innerHTML=`<div id="sug" class="hidden"></div><form id="gf"><div class="dial" id="dial"><span id="secs">${TIME}</span></div><div class="mid"><input id="gi" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="type your answer"><div class="air" id="air"><div></div></div></div><button class="px pink" id="gb">Dive</button></form>`;
+  $("gf").addEventListener("submit",e=>{e.preventDefault();guess($("gi").value);});
+  $("gi").addEventListener("input",()=>$("sug").classList.add("hidden"));
+  sink(); $("gi").focus(); tick(true);
+  clearInterval(timer); timer=setInterval(tick,1000);
+}
+function tick(init){
+  if(!init)left--;
+  const a=$("air"); if(!a)return;
+  const l=Math.max(left,0), low=left<=8, dl=$("dial");
+  a.firstChild.style.width=l/TIME*100+"%"; a.classList.toggle("low",low);
+  dl.style.setProperty("--p",l/TIME*100+"%"); dl.classList.toggle("low",low); $("secs").textContent=l;
+  if(left<=0)settle("",true);
+}
+function lev(a,b){const m=a.length,n=b.length,d=Array.from({length:m+1},(_,r)=>[r,...Array(n).fill(0)]);for(let j=1;j<=n;j++)d[0][j]=j;for(let r=1;r<=m;r++)for(let j=1;j<=n;j++)d[r][j]=Math.min(d[r-1][j]+1,d[r][j-1]+1,d[r-1][j-1]+(a[r-1]===b[j-1]?0:1));return d[m][n];}
+const titleCase=w=>w.replace(/(^|[\s-])([a-z])/g,(m,x,c)=>x+c.toUpperCase());
+function suggest(p,g){
+  const n=norm(g); if(n.length<4)return null;
+  const max=n.length>=8?2:1; let best=null,bd=99;
+  for(const [pts,list] of Object.entries(p.a))for(const w of list){const d=lev(n,norm(w));if(d>0&&(d<bd||(d===bd&&+pts>best.pts))){bd=d;best={w,pts:+pts};}}
+  return bd<=max?best.w:null;
+}
+function showSug(from,to){
+  const s=$("sug"); s.innerHTML=""; const l=el("div");
+  l.append(el("i","",`\u201C${from}\u201D`)," \u2192 ",el("b","",`\u201C${to}\u201D`));
+  s.append(l,el("small","","submit again to confirm \u00B7 or edit")); s.classList.remove("hidden");
+}
+/* a guess that isn't on the answer sheet doesn't end the prompt */
+function guess(g){
+  if(locked)return; g=g.trim(); if(!g)return;
+  if(lookup(PROMPTS[i],g))return settle(g);
+  const near=suggest(PROMPTS[i],g);
+  if(near){const t=titleCase(near);$("gi").value=t;$("gi").focus();showSug(g,t);return;}
+  const dupe=tries.includes(norm(g)); if(!dupe)tries.push(norm(g));
+  $("rv").textContent=dupe?"already tried. think rarer.":"not on the sheet. try another.";
+  const gi=$("gi"); gi.value=""; gi.focus();
+}
+/* the answer sinks past each tier line down to its depth, with the camera following */
+function diveAnim(S,T,pts,word){
+  return new Promise(done=>{
+    const H=innerHeight,k=KPM*H,hz=.28*H,dv=$("dv"); dv.innerHTML=""; dv.classList.remove("hidden"); document.body.classList.add("diving");
+    const lines=[10,15,30,60,85,100].map(tp=>{const d=el("div","tl");d.m=S+tp*10;d.style.setProperty("--c",CC[tp]);d.append(el("span","",`${TIERS[tp][0]} \u00B7 ${tp}`));dv.append(d);return d;});
+    const wrap=el("div","dw"), lab=el("div","dl",`\u201C${word.toUpperCase()}\u201D`), cr=el("div","dcr"); cr.innerHTML=CROWN("#ffd23f"); wrap.append(lab,cr); dv.append(wrap);
+    const dur=1300+pts*22, t0=performance.now(); let lastB=0;
+    const frame=now=>{
+      const u=Math.min(1,(now-t0)/dur), d=S+(T-S)*(1-Math.pow(1-u,3)), cam=camFor(d), ly=hz+(d-cam)*k-18;
+      camTo(cam,0,d);
+      wrap.style.transform=`translate(-50%,${ly.toFixed(1)}px)`;
+      lines.forEach(l=>{l.style.transform=`translateY(${(hz+(l.m-cam)*k).toFixed(1)}px)`;l.classList.toggle("hit",d>=l.m-.5);});
+      $("hd").textContent=Math.round(d).toLocaleString()+"m";
+      if(u<1&&now-lastB>110){lastB=now;const b=el("div","bub");b.style.left=`calc(50% + ${(Math.random()*150-75)|0}px)`;b.style.top=(ly+24)+"px";dv.append(b);setTimeout(()=>b.remove(),1700);}
+      if(u<1)requestAnimationFrame(frame);
+      else setTimeout(()=>{dv.classList.add("hidden");document.body.classList.remove("diving");done();},700);
+    };
+    requestAnimationFrame(frame);
+  });
+}
+async function settle(g,timedout){
+  if(locked)return; locked=true; clearInterval(timer);
+  const p=PROMPTS[i], pts=g.trim()?lookup(p,g):0, S=total*10;
+  total+=pts; results.push({q:p.q,guess:g.trim()||"(no answer)",pts,tries:tries.length});
+  $("sug")&&$("sug").classList.add("hidden");
+  if(pts){
+    toot(pts);
+    $("card").className=""; $("card").innerHTML=""; $("bar").className="hidden";
+    await diveAnim(S,S+pts*10,pts,g.trim());
+    $("bar").className="";
+  }
+  const card=$("card"); card.className="rcard"; card.innerHTML="";
+  const col=CC[pts]||"#a9bccb", h=el("h1","rt",pts?TIERS[pts][0]:"Nothing landed"); h.style.color=col;
+  const rp=el("p","rp"), pp=el("span","",`+${pts} pts`); pp.style.color=col; rp.append(pp,pts?` \u00B7 sink ${pts*10}m`:"");
+  const rc=el("div","rc"); if(pts)rc.innerHTML=CROWN(col);
+  card.append(h,rc,el("p","ra",g.trim()?`\u201C${g.trim()}\u201D`:"\u2014"),rp,
+    el("p","rf",pts?FLAVOR[pts]:(timedout?"the clock beat you to it.":"that answer didn't fit.")),
+    el("p","rf2",`total depth ${(total*10).toLocaleString()}m`));
+  const bar=$("bar"); bar.innerHTML="";
+  const nb=el("button","px dsc",i+1<PROMPTS.length?"Descend \u25BC":"Results \u25BC");
+  nb.onclick=()=>{i++;i<PROMPTS.length?showPrompt():finish(true);};
+  bar.append(nb); nb.focus();
+  sink();
+}
+const BANDS=[[0,150,10,"Plankton","drifting near the surface."],[151,250,30,"Schooler","keeping pace with the crowd."],[251,350,60,"Rare","past the thermocline. nice."],[351,449,85,"Deep Cut","properly deep."],[450,9999,100,"One in a Crownllion","trench dweller."]];
+const crownG=(c,x,y,k)=>`<g transform="translate(${x-8*k},${y-5.5*k}) scale(${k})"><path fill="${c}" d="M1 1h2v3H1zM7 0h2v4H7zM13 1h2v3h-2zM3 3h2v1H3zM11 3h2v1h-2zM1 4h14v7H1z"/><path fill="#000" opacity=".28" d="M1 9h14v2H1z"/><path fill="#fff" d="M7 5h2v2H7z"/></g>`;
+function diveLogSVG(){
+  const W=520,H=250,L=46,T=16,B=36,pw=W-L-12,ph=H-T-B,X=k=>L+24+k*(pw-48)/6,Y=p=>T+p/100*ph;
+  let g="";
+  [0,25,50,75,100].forEach(v=>{const y=Y(v);g+=`<line x1="${L}" x2="${W-10}" y1="${y}" y2="${y}" stroke="#25507a" stroke-dasharray="2 5" opacity=".6"/><text x="${L-6}" y="${y+4}" text-anchor="end" fill="#6e8da0" font-size="14">${v?"-"+v:"0m"}</text>`;});
+  results.forEach((r,k)=>{const x=X(k),y=Y(r.pts),c=CC[r.pts]||"#5a6b7d";
+    g+=`<line x1="${x}" x2="${x}" y1="${T}" y2="${y}" stroke="${c}" opacity=".5"/>`+(r.pts?crownG(c,x,y,1.5):`<circle cx="${x}" cy="${T}" r="4" fill="${c}"/>`)+`<text x="${x}" y="${H-10}" text-anchor="middle" fill="#6e8da0" font-size="14">${k+1}</text>`;});
+  return `<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+}
+const dens=(sc,h,v)=>sc.reduce((y,s)=>y+Math.exp(-.5*((v-s)/h)**2),0);
+/* live bell curve: a smoothed distribution of everyone's scores today */
+function bellSVG(rows){
+  const W=520,H=150,B=26,T=8,sc=rows.map(r=>r.score),n=sc.length,mean=sc.reduce((a,b)=>a+b,0)/n;
+  const sd=Math.sqrt(sc.reduce((a,b)=>a+(b-mean)**2,0)/n)||0, h=Math.max(35,1.06*(sd||40)*Math.pow(n,-.2));
+  let max=0; const pts=[]; for(let v=0;v<=700;v+=5){const y=dens(sc,h,v);pts.push([v,y]);if(y>max)max=y;}
+  const X=v=>v/700*W, Y=y=>T+(H-T-B)*(1-.92*y/max);
+  const line=pts.map(([v,y])=>`${X(v).toFixed(1)},${Y(y).toFixed(1)}`).join("L");
+  const tv=Math.min(total,700), yx=X(tv), yy=Y(dens(sc,h,tv));
+  let ax=""; for(let v=0;v<=700;v+=100)if(Math.abs(X(v)-yx)>32)ax+=`<text x="${X(v)}" y="${H-6}" text-anchor="${v===0?"start":v===700?"end":"middle"}" fill="#6e8da0" font-size="14">${v}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}"><path d="M${line}L${W},${H-B}L0,${H-B}Z" fill="rgba(63,216,240,.16)"/><path d="M${line}" fill="none" stroke="#3fd8f0" stroke-width="2.5"/><line x1="${yx}" x2="${yx}" y1="${yy}" y2="${H-B}" stroke="#ff4f8b" stroke-width="2.5"/><circle cx="${yx}" cy="${yy}" r="5" fill="#ff4f8b"/><text x="${yx}" y="${H-6}" text-anchor="middle" fill="#ff4f8b" font-size="15">YOU</text>${ax}</svg>`;
+}
+const openEv=new Set();
+function liveSummary(){
+  if(!$("bell"))return;
+  const rows=todayRows.slice();
+  if(user&&!rows.some(r=>r.uid===user.uid))rows.push({uid:user.uid,user:user.displayName||"you",score:total,results});
+  $("bell").innerHTML=bellSVG(rows);
+  const others=rows.filter(r=>!user||r.uid!==user.uid), pc=$("pct");
+  if(others.length){const below=others.filter(r=>r.score<total).length,tie=others.filter(r=>r.score===total).length;pc.textContent=`Better than ${Math.round(100*(below+tie/2)/others.length)}% of today's players (${others.length+1} played)`;}
+  else pc.textContent="First in the water today. The curve fills in as colleagues finish.";
+  const ev=$("ev"); ev.innerHTML="";
+  if(!others.length){ev.append(el("p","","No one else has finished yet. Check back as colleagues play."));return;}
+  others.sort((a,b)=>b.score-a.score).forEach(r=>{
+    const key=r.uid||r.user, d=document.createElement("details"), sm=document.createElement("summary");
+    sm.append(el("span","",r.user),el("span","",`${r.score} pts`)); d.append(sm);
+    const box=el("div","sheet");
+    (r.results||[]).forEach(x=>{const line=el("p"),tag=el("b","",`${x.pts} `);tag.style.color=CC[x.pts]||"#8aa3b3";line.append(tag,`${x.q.replace("Name a ","").replace("Name ","")}: ${x.guess}`);box.append(line);});
+    if(!(r.results||[]).length)box.textContent="No answers recorded.";
+    d.append(box); d.open=openEv.has(key);
+    d.addEventListener("toggle",()=>{d.open?openEv.add(key):openEv.delete(key);});
+    ev.append(d);
+  });
+}
+async function finish(save){
+  clearInterval(timer); document.body.classList.add("res"); $("bar").className="hidden";
+  camTo(0,innerHeight*.56);
+  const card=$("card"); card.className="sum"; card.innerHTML="";
+  const hd=el("div","sh"); hd.append(el("span","slogo","CROWNLLION"),el("span","sdate",`Dive #${diveNo} complete`)); card.append(hd);
+  const sc=el("div","ss"); sc.append(el("span","sbig",total.toLocaleString()),el("span","sdep",`-${(total*10).toLocaleString()}m`)); card.append(sc);
+  const bl=el("div"); bl.id="bell"; card.append(bl);
+  const pc=el("p","spct"); pc.id="pct"; card.append(pc);
+  
+  const note=el("p","",""); note.id="pend"; note.style.cssText="margin-top:10px;color:#7fb7d4"; card.append(note);
+  card.append(el("h3","sh3","Dive log")); const dl=el("div"); dl.innerHTML=diveLogSVG(); card.append(dl);
+  card.append(el("h3","sh3","The bearing"));
+  BANDS.forEach(([lo,hi,pt,name,txt])=>{
+    const r=el("div","bear"+(total>=lo&&total<=hi?" on":"")), ic=el("span"); ic.innerHTML=CROWN(CC[pt]); ic.firstChild.setAttribute("width","20");
+    const rg=el("b","",hi>999?`${lo}+`:`${lo}-${hi}`); rg.style.color=CC[pt];
+    r.append(ic,rg,el("span","",`${name}. ${txt}`)); card.append(r);
+  });
+  card.append(el("h3","sh3","Your answers"));
+  const rows=el("div","rows");
+  results.forEach(r=>{
+    const d=document.createElement("details"), sm=document.createElement("summary");
+    sm.append(el("span","",r.q.replace("Name a ","").replace("Name ","")),el("span","",`${r.guess} \u00B7 ${r.pts}`)); d.append(sm);
+    const sheet=PROMPTS.find(x=>x.q===r.q), box=el("div","sheet");
+    if(sheet){
+      Object.keys(sheet.a).map(Number).sort((x,y)=>y-x).forEach(pts=>{
+        const line=el("p"), tag=el("b","",`${TIERS[pts]?TIERS[pts][0]:""} \u00B7 ${pts}  `); tag.style.color=CC[pts]||"#fff"; line.append(tag);
+        sheet.a[pts].forEach((w,k)=>{line.append(el("span",norm(w)===norm(r.guess)?"mine":"",w));if(k<sheet.a[pts].length-1)line.append(", ");});
+        box.append(line);
+      });
+    }else box.textContent="Answer sheet not available.";
+    d.append(box); rows.append(d);
+  });
+  card.append(rows);
+  card.append(el("h3","sh3","Everyone's answers")); const ev=el("div","rows"); ev.id="ev"; card.append(ev);
+  liveSummary();
+  if(save)await saveScore();
+}
+async function saveScore(){
+  const n=$("pend");
+  try{await setDoc(doc(db,"scores",`${today}_${user.uid}`),{user:user.displayName||user.email.split("@")[0],uid:user.uid,score:total,puzzleId:today,dive:diveNo,results,createdAt:serverTimestamp()});if(n)n.textContent="Score saved to the leaderboard.";}
+  catch(e){console.error(e);if(n)n.textContent="Couldn't save score ("+(e.code||e.message)+"). Check your Firestore rules.";}
+}
+
+/* ---------- Auth (shown first) ---------- */
+let signup=false;
+const setMode=s=>{signup=s;$("a-title").textContent=s?"Sign up":"Log in";$("a-btn").textContent=s?"Create account":"Log in";$("a-sw").textContent=s?"Already have an account? Log in":"New here? Create an account";$("err").textContent="";};
+$("a-sw").onclick=()=>setMode(!signup);
+$("a-form").addEventListener("submit",async e=>{
+  e.preventDefault(); $("err").textContent="";
+  const name=$("u").value.trim(), email=name.toLowerCase().replace(/\s+/g,"")+"@team.local", pw=$("p").value;
+  try{
+    if(signup){const c=await createUserWithEmailAndPassword(auth,email,pw);await updateProfile(c.user,{displayName:name});await c.user.reload();begin(auth.currentUser);}
+    else await signInWithEmailAndPassword(auth,email,pw);
+  }catch(err){$("err").textContent=err.message.replace("Firebase: ","");}
+});
+
+let begun=null;
+/* Questions: Firestore dives/<YYYY-MM-DD>, then dives/default, then the built-in set */
+async function loadPrompts(){
+  for(const id of [today,"default"]){
+    try{
+      const s=await getDoc(doc(db,"dives",id));
+      if(s.exists()&&Array.isArray(s.data().prompts)&&s.data().prompts.length){console.log("Loaded prompts from dives/"+id);return prep(s.data().prompts);}
+    }catch(e){console.warn("Couldn't read dives/"+id+":",e.code||e.message);}
+  }
+  console.log("Using built-in prompts");
+  return PROMPTS;
+}
+let played=false, promptsReady=null;
+async function begin(u){
+  if(begun===u.uid)return; begun=u.uid; user=u;
+  const w=$("who"); w.innerHTML=""; w.append(el("span","",u.displayName||u.email.split("@")[0]));
+  const out=el("button","px sm","Log out"); out.onclick=()=>signOut(auth); w.append(out);
+  total=0;i=0;results=[];played=false;
+  /* home screen: same scene, "Begin descent" instead of the login box */
+  $("box").classList.add("hidden"); $("home").classList.remove("hidden"); $("auth").classList.remove("hidden");
+  $("dive-no").textContent="Dive #"+diveNo;
+  promptsReady=loadPrompts();
+  try{
+    const snap=await getDoc(doc(db,"scores",`${today}_${u.uid}`));
+    if(snap.exists()){const d=snap.data();total=d.score;results=d.results||[];played=true;$("go").innerHTML="&#9660; View today's result &#9660;";}
+  }catch(e){console.warn("Couldn't check today's score:",e.code||e.message);}
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+/* never wait more than 2.5s on Firestore for questions: fall back to the built-in set */
+const racePrompts=()=>Promise.race([promptsReady||loadPrompts(),sleep(2500).then(()=>PROMPTS)]);
+$("go").onclick=async()=>{
+  $("auth").classList.add("hidden"); document.body.classList.add("in");
+  if(played){PROMPTS=await racePrompts();sink();finish(false);return;}
+  $("card").innerHTML=""; $("card").append(el("p","ds","descending…")); sink();
+  const [ps]=await Promise.all([racePrompts(),sleep(1200)]);
+  PROMPTS=ps; showPrompt();
+};
+onAuthStateChanged(auth,u=>{
+  if(u)begin(u);
+  else{begun=null;user=null;played=false;clearInterval(timer);$("who").innerHTML="";$("card").innerHTML="";document.body.classList.remove("in","res");home();$("home").classList.add("hidden");$("box").classList.remove("hidden");$("auth").classList.remove("hidden");}
+});
+
+/* ---------- Leaderboard ---------- */
+onSnapshot(query(collection(db,"scores"),where("puzzleId","==",today)),snap=>{
+  const rows=snap.docs.map(d=>d.data()).sort((a,b)=>b.score-a.score);
+  todayRows=rows; if(document.body.classList.contains("res"))liveSummary();
+  const lb=$("lb"); lb.innerHTML="";
+  if(!rows.length){lb.append(el("p","","No dives yet today. Be the first in the water."));return;}
+  rows.forEach((r,k)=>{
+    const d=el("div","row"+(user&&r.uid===user.uid?" me":""));
+    d.append(el("span","",k+1),el("span","",r.user),el("em","",(r.score*10).toLocaleString()+" m"),el("strong","",r.score+" pts"));
+    lb.append(d);
+  });
+},err=>{console.error(err);$("lb").textContent="Couldn't load scores ("+err.code+"). Check your Firestore rules.";});
+onSnapshot(collection(db,"scores"),snap=>{
+  const m={};
+  snap.docs.forEach(d=>{const r=d.data(),k=r.uid||r.user,e=m[k]||(m[k]={k,user:r.user,total:0,dives:0});e.total+=r.score||0;e.dives++;});
+  const rows=Object.values(m).sort((a,b)=>b.total-a.total), box=$("all"); box.innerHTML="";
+  if(!rows.length){box.append(el("p","","No dives recorded yet."));return;}
+  rows.forEach((r,k)=>{
+    const d=el("div","row"+(user&&r.k===user.uid?" me":""));
+    d.append(el("span","",k+1),el("span","",r.user),el("em","",r.dives+(r.dives===1?" dive":" dives")),el("strong","",r.total.toLocaleString()+" pts"));
+    box.append(d);
+  });
+},err=>{console.error(err);$("all").textContent="Couldn't load scores ("+err.code+").";});
+</script>
+</body>
+</html>
